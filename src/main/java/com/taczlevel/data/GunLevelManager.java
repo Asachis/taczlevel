@@ -10,15 +10,16 @@ public class GunLevelManager {
     private static final String RECOIL_LEVEL_TAG = "recoil_level";
     private static final String PEN_LEVEL_TAG = "pen_level";
     private static final String FIRE_RATE_LEVEL_TAG = "fire_rate_level";
+    private static final String DUMMY_AMMO_LEVEL_TAG = "dummy_ammo_level";
     private static final String EXP_TAG = "exp";
     private static final String ACTIVE_SLOT_TAG = "active_slot";
     private static final String GATE_UNLOCKED_TAG = "gate_unlocked";
 
     private static final String[] LEVEL_TAGS = {
         RELOAD_LEVEL_TAG, RECOIL_LEVEL_TAG, PEN_LEVEL_TAG,
-        FIRE_RATE_LEVEL_TAG
+        FIRE_RATE_LEVEL_TAG, DUMMY_AMMO_LEVEL_TAG
     };
-    private static final int OPTION_COUNT = 4;
+    private static final int OPTION_COUNT = 5;
 
     public static int getMaxLevel() {
         return ModConfig.STATS.maxLevel.get();
@@ -29,7 +30,9 @@ public class GunLevelManager {
     }
 
     private static int getMaxLevelByIndex(int i) {
-        return i < 3 ? getMaxLevel() : getMaxFireRateLevel();
+        if (i < 3) return getMaxLevel();
+        if (i == 3) return getMaxFireRateLevel();
+        return ModConfig.DUMMY_AMMO.maxLevel.get();
     }
 
     public static int getGateLevel() {
@@ -311,6 +314,26 @@ public class GunLevelManager {
         return Math.min(getFireRateLevel(stack) * (ModConfig.STATS.fireRatePerLevel.get() / 100.0), ModConfig.STATS.fireRateMaxBonus.get());
     }
 
+    // === Virtual ammo ===
+
+    public static int getDummyAmmoLevel(ItemStack stack) {
+        return getTagInt(stack, DUMMY_AMMO_LEVEL_TAG);
+    }
+
+    public static boolean upgradeDummyAmmo(ItemStack stack) {
+        return incrementTag(stack, DUMMY_AMMO_LEVEL_TAG, ModConfig.DUMMY_AMMO.maxLevel.get());
+    }
+
+    public static void setDummyAmmoLevel(ItemStack stack, int level) {
+        setTagInt(stack, DUMMY_AMMO_LEVEL_TAG, Math.min(level, ModConfig.DUMMY_AMMO.maxLevel.get()));
+    }
+
+    public static int getDummyAmmoMaxPool(ItemStack stack) {
+        int level = getDummyAmmoLevel(stack);
+        if (level <= 0) return 0;
+        return ModConfig.DUMMY_AMMO.getMaxPool(level);
+    }
+
     public static void initDefaultUpgrades(ItemStack stack) {
         if (hasAnyUpgrade(stack)) return;
         setTagInt(stack, RELOAD_LEVEL_TAG, 1);
@@ -328,6 +351,7 @@ public class GunLevelManager {
             case 1 -> getRecoilLevel(stack) > 0;
             case 2 -> getPenLevel(stack) > 0;
             case 3 -> getFireRateLevel(stack) > 0;
+            case 4 -> getDummyAmmoLevel(stack) > 0;
             default -> false;
         };
     }
@@ -338,6 +362,7 @@ public class GunLevelManager {
             case 1 -> getRecoilLevel(stack);
             case 2 -> getPenLevel(stack);
             case 3 -> getFireRateLevel(stack);
+            case 4 -> getDummyAmmoLevel(stack);
             default -> 0;
         };
     }
@@ -346,6 +371,7 @@ public class GunLevelManager {
         return switch (optionIndex) {
             case 0, 1, 2 -> getMaxLevel();
             case 3 -> getMaxFireRateLevel();
+            case 4 -> ModConfig.DUMMY_AMMO.maxLevel.get();
             default -> 0;
         };
     }
@@ -356,6 +382,7 @@ public class GunLevelManager {
             case 1 -> "gui.taczlevel.recoil";
             case 2 -> "gui.taczlevel.armor_pen";
             case 3 -> "gui.taczlevel.fire_rate";
+            case 4 -> "gui.taczlevel.dummy_ammo";
             default -> "";
         };
     }
@@ -366,6 +393,7 @@ public class GunLevelManager {
             case 1 -> "gui.taczlevel.option_name_recoil";
             case 2 -> "gui.taczlevel.option_name_pen";
             case 3 -> "gui.taczlevel.option_name_fire_rate";
+            case 4 -> "gui.taczlevel.option_name_dummy_ammo";
             default -> "";
         };
     }
@@ -376,6 +404,7 @@ public class GunLevelManager {
             case 1 -> level * ModConfig.STATS.recoilPerLevel.get();
             case 2 -> level * ModConfig.STATS.penPerLevel.get();
             case 3 -> level * ModConfig.STATS.fireRatePerLevel.get();
+            case 4 -> ModConfig.DUMMY_AMMO.getMaxPool(level);
             default -> 0.0;
         };
     }

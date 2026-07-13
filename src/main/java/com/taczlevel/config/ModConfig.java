@@ -13,6 +13,7 @@ public class ModConfig {
     public static final StationCategory STATION = new StationCategory();
     public static final SoundCategory SOUND = new SoundCategory();
     public static final OptionNotificationCategory OPTION_NOTIFICATION = new OptionNotificationCategory();
+    public static final DummyAmmoCategory DUMMY_AMMO = new DummyAmmoCategory();
     public static final GameRulesCategory GAME_RULES = new GameRulesCategory();
 
     public static final ForgeConfigSpec SPEC = BUILDER.build();
@@ -167,15 +168,15 @@ public class ModConfig {
         public final ForgeConfigSpec.ConfigValue<String>[] positions;
         public final ForgeConfigSpec.DoubleValue[] sizes;
 
-        private static final String[] NAMES = {"reload", "recoil", "penetration", "fire_rate"};
-        private static final String[] LABELS = {"Reload Speed", "Recoil", "Armor Penetration", "Fire Rate"};
+        private static final String[] NAMES = {"reload", "recoil", "penetration", "fire_rate", "dummy_ammo"};
+        private static final String[] LABELS = {"Reload Speed", "Recoil", "Armor Penetration", "Fire Rate", "Virtual Ammo"};
 
         @SuppressWarnings("unchecked")
         OptionNotificationCategory() {
             BUILDER.push("notification_options");
-            positions = new ForgeConfigSpec.ConfigValue[4];
-            sizes = new ForgeConfigSpec.DoubleValue[4];
-            for (int i = 0; i < 4; i++) {
+            positions = new ForgeConfigSpec.ConfigValue[5];
+            sizes = new ForgeConfigSpec.DoubleValue[5];
+            for (int i = 0; i < 5; i++) {
                 BUILDER.push(NAMES[i]);
                 positions[i] = BUILDER
                         .comment("Notification position for " + LABELS[i] + ": \"actionbar\", \"chat\", \"both\", or \"none\"")
@@ -196,6 +197,46 @@ public class ModConfig {
         public double getSize(int optionIndex) {
             if (optionIndex < 0 || optionIndex >= sizes.length) return 1.0;
             return sizes[optionIndex].get();
+        }
+    }
+
+    public static class DummyAmmoCategory {
+        public final ForgeConfigSpec.IntValue maxLevel;
+        public final ForgeConfigSpec.IntValue basePool;
+        public final ForgeConfigSpec.IntValue poolPerLevel;
+        public final ForgeConfigSpec.DoubleValue regenPerSecond;
+        public final ForgeConfigSpec.DoubleValue regenPerSecondPerLevel;
+        public final ForgeConfigSpec.IntValue regenDelayTicks;
+
+        DummyAmmoCategory() {
+            BUILDER.push("dummy_ammo");
+            maxLevel = BUILDER
+                    .comment("Maximum level for virtual ammo")
+                    .defineInRange("max_level", 10, 1, 100);
+            basePool = BUILDER
+                    .comment("Base ammo pool at level 1")
+                    .defineInRange("base_pool", 60, 1, 99999);
+            poolPerLevel = BUILDER
+                    .comment("Additional ammo pool per level beyond 1")
+                    .defineInRange("pool_per_level", 60, 1, 99999);
+            regenPerSecond = BUILDER
+                    .comment("Base ammo regenerated per second at level 1")
+                    .defineInRange("regen_per_second", 5.0, 0.0, 1000.0);
+            regenPerSecondPerLevel = BUILDER
+                    .comment("Additional ammo regenerated per second per level beyond 1")
+                    .defineInRange("regen_per_second_per_level", 5.0, 0.0, 1000.0);
+            regenDelayTicks = BUILDER
+                    .comment("Delay in ticks before regen starts after using ammo (20 ticks = 1 second)")
+                    .defineInRange("regen_delay_ticks", 40, 0, 6000);
+            BUILDER.pop();
+        }
+
+        public int getMaxPool(int level) {
+            return basePool.get() + poolPerLevel.get() * (level - 1);
+        }
+
+        public double getRegenPerSecond(int level) {
+            return regenPerSecond.get() + regenPerSecondPerLevel.get() * (level - 1);
         }
     }
 

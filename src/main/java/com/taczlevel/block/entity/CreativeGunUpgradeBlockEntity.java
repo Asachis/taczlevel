@@ -72,6 +72,7 @@ public class CreativeGunUpgradeBlockEntity extends BlockEntity implements MenuPr
             case 1 -> GunLevelManager.upgradeRecoil(gun);
             case 2 -> GunLevelManager.upgradePen(gun);
             case 3 -> GunLevelManager.upgradeFireRate(gun);
+            case 4 -> GunLevelManager.upgradeDummyAmmo(gun);
             default -> false;
         };
 

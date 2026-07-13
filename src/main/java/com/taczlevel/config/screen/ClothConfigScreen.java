@@ -21,6 +21,7 @@ public class ClothConfigScreen {
         buildStation(builder, eb);
         buildSound(builder, eb);
         buildOptionNotifications(builder, eb);
+        buildDummyAmmo(builder, eb);
 
         return builder.build();
     }
@@ -125,8 +126,8 @@ public class ClothConfigScreen {
     private static void buildOptionNotifications(ConfigBuilder builder, ConfigEntryBuilder eb) {
         ConfigCategory cat = builder.getOrCreateCategory(Component.translatable("config.taczlevel.section.notification_options"));
 
-        String[] optionKeys = {"reload", "recoil", "penetration", "fire_rate"};
-        for (int i = 0; i < 4; i++) {
+        String[] optionKeys = {"reload", "recoil", "penetration", "fire_rate", "dummy_ammo"};
+        for (int i = 0; i < 5; i++) {
             String base = "config.taczlevel.notification_options." + optionKeys[i];
             int idx = i;
 
@@ -146,6 +147,23 @@ public class ClothConfigScreen {
                     .setSaveConsumer(v -> ModConfig.OPTION_NOTIFICATION.sizes[idx].set(v))
                     .build());
         }
+    }
+
+    private static void buildDummyAmmo(ConfigBuilder builder, ConfigEntryBuilder eb) {
+        ConfigCategory cat = builder.getOrCreateCategory(Component.translatable("config.taczlevel.section.dummy_ammo"));
+
+        addIntEntry(cat, eb, "config.taczlevel.dummy_ammo.max_level",
+                ModConfig.DUMMY_AMMO.maxLevel.get(), 10, v -> ModConfig.DUMMY_AMMO.maxLevel.set(v));
+        addIntEntry(cat, eb, "config.taczlevel.dummy_ammo.base_pool",
+                ModConfig.DUMMY_AMMO.basePool.get(), 60, v -> ModConfig.DUMMY_AMMO.basePool.set(v));
+        addIntEntry(cat, eb, "config.taczlevel.dummy_ammo.pool_per_level",
+                ModConfig.DUMMY_AMMO.poolPerLevel.get(), 60, v -> ModConfig.DUMMY_AMMO.poolPerLevel.set(v));
+        addDoubleEntry(cat, eb, "config.taczlevel.dummy_ammo.regen_per_second",
+                ModConfig.DUMMY_AMMO.regenPerSecond.get(), 5.0, v -> ModConfig.DUMMY_AMMO.regenPerSecond.set(v));
+        addDoubleEntry(cat, eb, "config.taczlevel.dummy_ammo.regen_per_second_per_level",
+                ModConfig.DUMMY_AMMO.regenPerSecondPerLevel.get(), 5.0, v -> ModConfig.DUMMY_AMMO.regenPerSecondPerLevel.set(v));
+        addIntEntry(cat, eb, "config.taczlevel.dummy_ammo.regen_delay_ticks",
+                ModConfig.DUMMY_AMMO.regenDelayTicks.get(), 40, v -> ModConfig.DUMMY_AMMO.regenDelayTicks.set(v));
     }
 
     private static void addIntEntry(ConfigCategory cat, ConfigEntryBuilder eb,

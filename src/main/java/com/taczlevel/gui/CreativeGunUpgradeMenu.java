@@ -69,6 +69,11 @@ public class CreativeGunUpgradeMenu extends AbstractContainerMenu {
         return GunLevelManager.getFireRateLevel(gun);
     }
 
+    public int getDummyAmmoLevel() {
+        ItemStack gun = blockEntity.getItemHandler().getStackInSlot(CreativeGunUpgradeBlockEntity.GUN_SLOT);
+        return GunLevelManager.getDummyAmmoLevel(gun);
+    }
+
     public int getExp() {
         ItemStack gun = blockEntity.getItemHandler().getStackInSlot(CreativeGunUpgradeBlockEntity.GUN_SLOT);
         return GunLevelManager.getExp(gun);

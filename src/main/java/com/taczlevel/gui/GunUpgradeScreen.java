@@ -28,10 +28,10 @@ public class GunUpgradeScreen extends AbstractContainerScreen<GunUpgradeMenu> {
     private static final int BAR_TRACK     = 0xFF2a2a44;
 
     private static final int[] ACCENT = {
-        0xFF00d4aa, 0xFFff8800, 0xFFa855f7, 0xFFef4444,
+        0xFF00d4aa, 0xFFff8800, 0xFFa855f7, 0xFFef4444, 0xFF44aaff,
     };
     private static final int[] ACCENT_DIM = {
-        0xFF004d3f, 0xFF4d2a00, 0xFF3a1a55, 0xFF4d1515,
+        0xFF004d3f, 0xFF4d2a00, 0xFF3a1a55, 0xFF4d1515, 0xFF004d7f,
     };
 
     private static final int CARDS_X   = 74;
@@ -41,7 +41,7 @@ public class GunUpgradeScreen extends AbstractContainerScreen<GunUpgradeMenu> {
     private static final int CARD_GAP  = 2;
     private static final int BTN_W     = 50;
     private static final int BTN_H     = 12;
-    private static final int OPTIONS   = 4;
+    private static final int OPTIONS   = 5;
 
     private static final int EXP_TEXT_Y = 128;
     private static final int EXP_BAR_Y  = 134;

@@ -5,6 +5,7 @@ import com.taczlevel.config.ModConfig;
 import com.taczlevel.data.GunLevelManager;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
@@ -20,6 +21,7 @@ import net.minecraftforge.event.entity.living.LivingDeathEvent;
 import net.minecraftforge.event.entity.living.LivingHurtEvent;
 import net.minecraftforge.event.entity.player.ItemTooltipEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
+import net.minecraftforge.event.entity.living.LivingEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 
 import java.util.List;
@@ -48,7 +50,7 @@ public class GunEvents {
     private void notifyOptionLevelUp(Player player, int leveledMask, ItemStack gun) {
         if (leveledMask == 0) return;
 
-        for (int i = 0; i < 4; i++) {
+        for (int i = 0; i < 5; i++) {
             if ((leveledMask & (1 << i)) != 0) {
                 int newLevel = GunLevelManager.getLevel(gun, i);
                 String pos = ModConfig.OPTION_NOTIFICATION.getPosition(i);
@@ -161,12 +163,14 @@ public class GunEvents {
             {reloadLvl, GunLevelManager.getMaxLevel()},
             {recoilLvl, GunLevelManager.getMaxLevel()},
             {penLvl, GunLevelManager.getMaxLevel()},
-            {fireRateLvl, GunLevelManager.getMaxFireRateLevel()}
+            {fireRateLvl, GunLevelManager.getMaxFireRateLevel()},
+            {GunLevelManager.getDummyAmmoLevel(stack), ModConfig.DUMMY_AMMO.maxLevel.get()}
         };
         String[] keys = {"gui.taczlevel.tooltip_reload", "gui.taczlevel.tooltip_recoil",
-                "gui.taczlevel.tooltip_pen", "gui.taczlevel.tooltip_fire_rate"};
+                "gui.taczlevel.tooltip_pen", "gui.taczlevel.tooltip_fire_rate",
+                "gui.taczlevel.tooltip_dummy_ammo"};
 
-        for (int i = 0; i < 4; i++) {
+        for (int i = 0; i < 5; i++) {
             int lvl = stats[i][0];
             int max = stats[i][1];
             if (lvl > 0) {
@@ -206,6 +210,62 @@ public class GunEvents {
         if (isTaczGun(stack)) {
             GunLevelManager.initDefaultUpgrades(stack);
         }
+    }
+
+    @SubscribeEvent
+    public void onLivingTick(LivingEvent.LivingTickEvent event) {
+        if (event.getEntity().level().isClientSide) return;
+        LivingEntity entity = event.getEntity();
+        if (entity.tickCount % 5 != 0) return;
+
+        ItemStack gun = entity.getMainHandItem();
+        if (!isTaczGun(gun)) return;
+
+        int level = GunLevelManager.getDummyAmmoLevel(gun);
+        if (level <= 0) return;
+
+        int maxLevel = ModConfig.DUMMY_AMMO.maxLevel.get();
+
+        if (level >= maxLevel) {
+            gun.getOrCreateTag().putInt("DummyAmmo", 9999);
+            return;
+        }
+
+        int maxPool = ModConfig.DUMMY_AMMO.getMaxPool(level);
+        CompoundTag rootTag = gun.getOrCreateTag();
+        int current = rootTag.getInt("DummyAmmo");
+
+        if (current >= maxPool) {
+            if (current > maxPool) {
+                rootTag.putInt("DummyAmmo", maxPool);
+            }
+            return;
+        }
+
+        int delay = ModConfig.DUMMY_AMMO.regenDelayTicks.get();
+        int cooldown = rootTag.getInt("DummyAmmoRegenCooldown");
+
+        if (cooldown > 0) {
+            rootTag.putInt("DummyAmmoRegenCooldown", Math.max(0, cooldown - 5));
+            rootTag.putInt("DummyAmmoLastTick", current);
+            return;
+        }
+
+        int lastTick = rootTag.getInt("DummyAmmoLastTick");
+        if (current < lastTick) {
+            rootTag.putInt("DummyAmmoRegenCooldown", delay);
+            rootTag.putInt("DummyAmmoLastTick", current);
+            return;
+        }
+        rootTag.putInt("DummyAmmoLastTick", current);
+
+        double regenPerSecond = ModConfig.DUMMY_AMMO.getRegenPerSecond(level);
+        double regen = regenPerSecond * 5.0 / 20.0;
+        if (regen < 1) regen = 1;
+
+        int newAmmo = Math.min(maxPool, current + (int) regen);
+        rootTag.putInt("DummyAmmo", newAmmo);
+        rootTag.putInt("DummyAmmoLastTick", newAmmo);
     }
 
     private int getExpForMob(LivingEntity entity) {
