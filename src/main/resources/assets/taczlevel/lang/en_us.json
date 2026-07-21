@@ -182,5 +182,14 @@
   "config.taczlevel.notification_options.weight.position": "Weight Reduction Notification Position",
   "config.taczlevel.notification_options.weight.position.tooltip": "Weight reduction upgrade notification position: \"actionbar\", \"chat\", \"both\", or \"none\"",
   "config.taczlevel.notification_options.weight.size": "Weight Reduction Notification Size",
-  "config.taczlevel.notification_options.weight.size.tooltip": "Weight reduction upgrade text scale (0.5=small, 1.0=normal, 2.0=large)"
+  "config.taczlevel.notification_options.weight.size.tooltip": "Weight reduction upgrade text scale (0.5=small, 1.0=normal, 2.0=large)",
+
+  "config.taczlevel.section.game_rules": "Game Rules",
+  "config.taczlevel.game_rules.start_with_upgrades": "Start With Upgrades",
+  "config.taczlevel.game_rules.start_with_upgrades.tooltip": "When enabled, players receive tacz guns with all upgrades at level 1 by default",
+  "config.taczlevel.game_rules.attribute_mode": "Attribute Mode",
+  "config.taczlevel.game_rules.attribute_mode.tooltip": "How upgrade bonuses are applied: \"auto\" (TAA entity attrs if loaded, else cache), \"taa\" (force TAA entity attrs), \"taczlevel\" (force built-in cache property)",
+  "config.taczlevel.game_rules.attribute_mode.auto": "Auto",
+  "config.taczlevel.game_rules.attribute_mode.taa": "TAA Entity Attributes",
+  "config.taczlevel.game_rules.attribute_mode.taczlevel": "Built-in Cache Property"
 }

@@ -24,6 +24,7 @@ public class ClothConfigScreen {
         buildDummyAmmo(builder, eb);
         buildWeight(builder, eb);
         buildAutoRules(builder, eb);
+        buildGameRules(builder, eb);
 
         return builder.build();
     }
@@ -186,6 +187,28 @@ public class ClothConfigScreen {
                 .setDefaultValue(false)
                 .setTooltip(Component.translatable("config.taczlevel.auto_rules.auto_dummy_ammo.tooltip"))
                 .setSaveConsumer(v -> ModConfig.AUTO_RULES.autoDummyAmmo.set(v))
+                .build());
+    }
+
+    private static void buildGameRules(ConfigBuilder builder, ConfigEntryBuilder eb) {
+        ConfigCategory cat = builder.getOrCreateCategory(Component.translatable("config.taczlevel.section.game_rules"));
+
+        cat.addEntry(eb.startBooleanToggle(
+                        Component.translatable("config.taczlevel.game_rules.start_with_upgrades"),
+                        ModConfig.GAME_RULES.startWithUpgrades.get())
+                .setDefaultValue(false)
+                .setTooltip(Component.translatable("config.taczlevel.game_rules.start_with_upgrades.tooltip"))
+                .setSaveConsumer(v -> ModConfig.GAME_RULES.startWithUpgrades.set(v))
+                .build());
+
+        cat.addEntry(eb.startSelector(
+                        Component.translatable("config.taczlevel.game_rules.attribute_mode"),
+                        new String[]{"auto", "taa", "taczlevel"},
+                        ModConfig.GAME_RULES.getAttributeMode())
+                .setDefaultValue("auto")
+                .setTooltip(Component.translatable("config.taczlevel.game_rules.attribute_mode.tooltip"))
+                .setSaveConsumer(v -> ModConfig.GAME_RULES.attributeMode.set(v))
+                .setNameProvider(value -> Component.translatable("config.taczlevel.game_rules.attribute_mode." + value))
                 .build());
     }
 

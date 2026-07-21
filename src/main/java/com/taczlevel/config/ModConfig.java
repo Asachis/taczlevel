@@ -3,6 +3,7 @@ package com.taczlevel.config;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.Item;
 import net.minecraft.core.registries.BuiltInRegistries;
+import net.neoforged.fml.ModList;
 import net.neoforged.neoforge.common.ModConfigSpec;
 
 public class ModConfig {
@@ -264,13 +265,27 @@ public class ModConfig {
 
     public static class GameRulesCategory {
         public final ModConfigSpec.BooleanValue startWithUpgrades;
+        public final ModConfigSpec.ConfigValue<String> attributeMode;
+
+        private static final String[] VALID_MODES = {"auto", "taa", "taczlevel"};
 
         GameRulesCategory() {
             BUILDER.push("game_rules");
             startWithUpgrades = BUILDER
                     .comment("When enabled, players receive tacz guns with all upgrades at level 1 by default")
                     .define("start_with_upgrades", false);
+            attributeMode = BUILDER
+                    .comment("Attribute application mode: \"auto\" (use TAA entity attributes if loaded, fallback to cache), \"taa\" (force TAA entity attribute mode), \"taczlevel\" (force built-in cache property mode)")
+                    .define("attribute_mode", "auto");
             BUILDER.pop();
+        }
+
+        public String getAttributeMode() {
+            String mode = attributeMode.get();
+            for (String valid : VALID_MODES) {
+                if (valid.equals(mode)) return mode;
+            }
+            return "auto";
         }
     }
 
@@ -284,5 +299,13 @@ public class ModConfig {
                     .define("auto_dummy_ammo", false);
             BUILDER.pop();
         }
+    }
+
+    public static boolean useEntityAttributes() {
+        return switch (GAME_RULES.getAttributeMode()) {
+            case "taa" -> true;
+            case "taczlevel" -> false;
+            default -> ModList.get().isLoaded("taa");
+        };
     }
 }

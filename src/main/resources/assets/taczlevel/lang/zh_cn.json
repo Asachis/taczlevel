@@ -182,5 +182,14 @@
   "config.taczlevel.notification_options.weight.position": "减重通知位置",
   "config.taczlevel.notification_options.weight.position.tooltip": "减重升级通知显示位置: \"actionbar\", \"chat\", \"both\", 或 \"none\"",
   "config.taczlevel.notification_options.weight.size": "减重通知大小",
-  "config.taczlevel.notification_options.weight.size.tooltip": "减重升级文字缩放 (0.5=小, 1.0=正常, 2.0=大)"
+  "config.taczlevel.notification_options.weight.size.tooltip": "减重升级文字缩放 (0.5=小, 1.0=正常, 2.0=大)",
+
+  "config.taczlevel.section.game_rules": "游戏规则",
+  "config.taczlevel.game_rules.start_with_upgrades": "初始自带升级",
+  "config.taczlevel.game_rules.start_with_upgrades.tooltip": "启用后，玩家获得TACZ枪械时自带1级所有升级",
+  "config.taczlevel.game_rules.attribute_mode": "属性模式",
+  "config.taczlevel.game_rules.attribute_mode.tooltip": "升级加成的应用方式：\"auto\"（自动选择），\"taa\"（使用TAA实体属性），\"taczlevel\"（使用内置缓存属性）",
+  "config.taczlevel.game_rules.attribute_mode.auto": "自动",
+  "config.taczlevel.game_rules.attribute_mode.taa": "TAA实体属性",
+  "config.taczlevel.game_rules.attribute_mode.taczlevel": "内置缓存属性"
 }

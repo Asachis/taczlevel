@@ -6,6 +6,7 @@ import com.taczlevel.command.TaczLevelCommand;
 import com.taczlevel.config.ModConfig;
 import com.taczlevel.event.GunEvents;
 import com.taczlevel.event.GunStatsHandler;
+import com.taczlevel.event.TAACompatHandler;
 import com.taczlevel.network.GunUpgradePayload;
 import net.minecraft.resources.ResourceLocation;
 import net.neoforged.bus.api.IEventBus;
@@ -40,6 +41,9 @@ public class TaczLevelMod {
         neoBus.register(new GunEvents());
         neoBus.register(new GunStatsHandler());
         neoBus.register(new AttributeHandler());
+        if (ModConfig.useEntityAttributes()) {
+            neoBus.register(new TAACompatHandler());
+        }
         neoBus.addListener(this::registerCommands);
 
         tryRegisterConfigScreen(container);

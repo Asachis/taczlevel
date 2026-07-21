@@ -7,6 +7,7 @@ import com.tacz.guns.api.item.IGun;
 import com.tacz.guns.api.modifier.ParameterizedCachePair;
 import com.tacz.guns.resource.modifier.AttachmentCacheProperty;
 import com.tacz.guns.resource.pojo.data.attachment.Modifier;
+import com.taczlevel.config.ModConfig;
 import com.taczlevel.data.GunLevelManager;
 import com.taczlevel.event.GunEvents;
 import net.minecraft.resources.ResourceLocation;
@@ -79,18 +80,6 @@ public class AttributeHandler {
         IGunOperator operator = IGunOperator.fromLivingEntity(entity);
         if (operator == null) return;
 
-        applyReloadSpeedBonus(operator, gun);
-        applyCacheBonuses(operator, gun);
-    }
-
-    private void applyReloadSpeedBonus(IGunOperator operator, ItemStack gun) {
-        double reloadBonus = GunLevelManager.getReloadSpeedBonus(gun);
-        if (reloadBonus > 0 && operator.getDataHolder().reloadTimestamp > 0) {
-            operator.getDataHolder().reloadTimestamp -= (long) (CHECK_INTERVAL * TICK_MS * reloadBonus);
-        }
-    }
-
-    private void applyCacheBonuses(IGunOperator operator, ItemStack gun) {
         IGun iGun = IGun.getIGunOrNull(gun);
         if (iGun == null) return;
 
@@ -99,13 +88,26 @@ public class AttributeHandler {
             AttachmentCacheProperty cache = new AttachmentCacheProperty();
             cache.eval(gun, index.getGunData());
 
-            applyPenetrationBonus(cache, gun);
-            applyFireRateBonus(cache, gun);
-            applyRecoilReduction(cache, gun);
+            boolean useEntityAttrs = ModConfig.useEntityAttributes();
+
+            if (!useEntityAttrs) {
+                applyReloadSpeedBonus(operator, gun);
+                applyPenetrationBonus(cache, gun);
+                applyFireRateBonus(cache, gun);
+                applyRecoilReduction(cache, gun);
+            }
+
             applyWeightReduction(cache, gun);
 
             operator.updateCacheProperty(cache);
         });
+    }
+
+    private void applyReloadSpeedBonus(IGunOperator operator, ItemStack gun) {
+        double reloadBonus = GunLevelManager.getReloadSpeedBonus(gun);
+        if (reloadBonus > 0 && operator.getDataHolder().reloadTimestamp > 0) {
+            operator.getDataHolder().reloadTimestamp -= (long) (CHECK_INTERVAL * TICK_MS * reloadBonus);
+        }
     }
 
     private void applyPenetrationBonus(AttachmentCacheProperty cache, ItemStack gun) {
