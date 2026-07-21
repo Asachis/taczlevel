@@ -10,7 +10,7 @@ import com.tacz.guns.resource.pojo.data.attachment.Modifier;
 import com.taczlevel.data.GunLevelManager;
 import com.taczlevel.event.GunEvents;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.neoforge.event.entity.EntityAttributeModificationEvent;
@@ -70,17 +70,17 @@ public class AttributeHandler {
 
     @SubscribeEvent
     public void onLivingTick(EntityTickEvent.Post event) {
-        if (!(event.getEntity() instanceof Player player)) return;
-        if (player.tickCount % CHECK_INTERVAL != 0) return;
+        if (!(event.getEntity() instanceof LivingEntity entity)) return;
+        if (entity.tickCount % CHECK_INTERVAL != 0) return;
 
-        ItemStack gun = player.getMainHandItem();
+        ItemStack gun = entity.getMainHandItem();
         if (!GunEvents.isTaczGun(gun) || !GunLevelManager.hasAnyUpgrade(gun)) return;
 
-        IGunOperator operator = IGunOperator.fromLivingEntity(player);
+        IGunOperator operator = IGunOperator.fromLivingEntity(entity);
         if (operator == null) return;
 
         applyReloadSpeedBonus(operator, gun);
-        applyCacheBonuses(operator, player, gun);
+        applyCacheBonuses(operator, gun);
     }
 
     private void applyReloadSpeedBonus(IGunOperator operator, ItemStack gun) {
@@ -90,7 +90,7 @@ public class AttributeHandler {
         }
     }
 
-    private void applyCacheBonuses(IGunOperator operator, Player player, ItemStack gun) {
+    private void applyCacheBonuses(IGunOperator operator, ItemStack gun) {
         IGun iGun = IGun.getIGunOrNull(gun);
         if (iGun == null) return;
 

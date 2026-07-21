@@ -34,22 +34,22 @@ public class GunEvents {
         return IGun.getIGunOrNull(stack) != null;
     }
 
-    private Player getPlayerSource(DamageSource source) {
+    private LivingEntity getLivingSource(DamageSource source) {
         Entity entity = source.getEntity();
-        if (entity instanceof Player player) {
-            return player;
+        if (entity instanceof LivingEntity living) {
+            return living;
         }
-        if (entity instanceof Projectile proj && proj.getOwner() instanceof Player player) {
-            return player;
+        if (entity instanceof Projectile proj && proj.getOwner() instanceof LivingEntity living) {
+            return living;
         }
         Entity direct = source.getDirectEntity();
-        if (direct instanceof Projectile proj && proj.getOwner() instanceof Player player) {
-            return player;
+        if (direct instanceof Projectile proj && proj.getOwner() instanceof LivingEntity living) {
+            return living;
         }
         return null;
     }
 
-    private void notifyOptionLevelUp(Player player, int leveledMask, ItemStack gun) {
+    private void notifyOptionLevelUp(LivingEntity entity, int leveledMask, ItemStack gun) {
         if (leveledMask == 0) return;
 
         for (int i = 0; i < 6; i++) {
@@ -70,13 +70,15 @@ public class GunEvents {
                         Component.translatable("message.taczlevel.option_level_up",
                                 Component.translatable(GunLevelManager.getOptionNameKey(i)), newLevel));
 
-                switch (pos) {
-                    case "chat" -> player.sendSystemMessage(msg);
-                    case "both" -> {
-                        player.displayClientMessage(msg, true);
-                        player.sendSystemMessage(msg);
+                if (entity instanceof Player player) {
+                    switch (pos) {
+                        case "chat" -> player.sendSystemMessage(msg);
+                        case "both" -> {
+                            player.displayClientMessage(msg, true);
+                            player.sendSystemMessage(msg);
+                        }
+                        default -> player.displayClientMessage(msg, true);
                     }
-                    default -> player.displayClientMessage(msg, true);
                 }
             }
         }
@@ -84,16 +86,16 @@ public class GunEvents {
         if (ModConfig.SOUND.enabled.get()) {
             float vol = ModConfig.SOUND.volume.get().floatValue();
             float pitch = ModConfig.SOUND.pitch.get().floatValue();
-            player.level().playSound(null, player.getX(), player.getY(), player.getZ(),
+            entity.level().playSound(null, entity.getX(), entity.getY(), entity.getZ(),
                     SoundEvents.EXPERIENCE_ORB_PICKUP, SoundSource.PLAYERS, vol, pitch);
         }
     }
 
     @SubscribeEvent
     public void onLivingDeath(LivingDeathEvent event) {
-        Player player = getPlayerSource(event.getSource());
-        if (player == null) return;
-        ItemStack gun = player.getMainHandItem();
+        LivingEntity source = getLivingSource(event.getSource());
+        if (source == null) return;
+        ItemStack gun = source.getMainHandItem();
         if (isTaczGun(gun) && GunLevelManager.hasAnyUpgrade(gun)) {
             int exp = getExpForMob(event.getEntity());
             if (exp > 0) {
@@ -104,7 +106,7 @@ public class GunEvents {
                     result = GunLevelManager.addExp(gun, exp);
                 }
                 if (result != 0) {
-                    notifyOptionLevelUp(player, result, gun);
+                    notifyOptionLevelUp(source, result, gun);
                 }
             }
         }
@@ -112,9 +114,9 @@ public class GunEvents {
 
     @SubscribeEvent
     public void onLivingDamagePost(LivingDamageEvent.Post event) {
-        Player player = getPlayerSource(event.getSource());
-        if (player == null) return;
-        ItemStack gun = player.getMainHandItem();
+        LivingEntity source = getLivingSource(event.getSource());
+        if (source == null) return;
+        ItemStack gun = source.getMainHandItem();
         if (!isTaczGun(gun)) return;
 
         if (GunLevelManager.hasAnyUpgrade(gun)) {
@@ -128,7 +130,7 @@ public class GunEvents {
                     result = GunLevelManager.addExp(gun, dmgExp);
                 }
                 if (result != 0) {
-                    notifyOptionLevelUp(player, result, gun);
+                    notifyOptionLevelUp(source, result, gun);
                 }
             }
         }
