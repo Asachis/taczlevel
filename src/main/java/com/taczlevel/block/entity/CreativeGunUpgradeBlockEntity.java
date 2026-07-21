@@ -6,7 +6,7 @@ import com.taczlevel.data.GunLevelManager;
 import com.taczlevel.event.GunEvents;
 import com.taczlevel.gui.CreativeGunUpgradeMenu;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.Direction;
+import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.sounds.SoundEvents;
@@ -16,15 +16,10 @@ import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraftforge.common.capabilities.Capability;
-import net.minecraftforge.common.capabilities.ForgeCapabilities;
-import net.minecraftforge.common.util.LazyOptional;
-import net.minecraftforge.items.IItemHandler;
-import net.minecraftforge.items.ItemStackHandler;
+import net.neoforged.neoforge.items.ItemStackHandler;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -47,8 +42,6 @@ public class CreativeGunUpgradeBlockEntity extends BlockEntity implements MenuPr
             };
         }
     };
-
-    private LazyOptional<IItemHandler> lazyItemHandler = LazyOptional.empty();
 
     public CreativeGunUpgradeBlockEntity(BlockPos pos, BlockState state) {
         super(ModBlockEntities.CREATIVE_GUN_UPGRADE_BE.get(), pos, state);
@@ -73,6 +66,7 @@ public class CreativeGunUpgradeBlockEntity extends BlockEntity implements MenuPr
             case 2 -> GunLevelManager.upgradePen(gun);
             case 3 -> GunLevelManager.upgradeFireRate(gun);
             case 4 -> GunLevelManager.upgradeDummyAmmo(gun);
+            case 5 -> GunLevelManager.upgradeWeight(gun);
             default -> false;
         };
 
@@ -118,34 +112,30 @@ public class CreativeGunUpgradeBlockEntity extends BlockEntity implements MenuPr
     }
 
     @Override
-    public @NotNull <T> LazyOptional<T> getCapability(@NotNull Capability<T> cap, @Nullable Direction side) {
-        if (cap == ForgeCapabilities.ITEM_HANDLER) {
-            return lazyItemHandler.cast();
-        }
-        return super.getCapability(cap, side);
-    }
-
-    @Override
     public void onLoad() {
         super.onLoad();
-        lazyItemHandler = LazyOptional.of(() -> itemHandler);
+        if (level != null) {
+            level.invalidateCapabilities(worldPosition);
+        }
     }
 
     @Override
-    public void invalidateCaps() {
-        super.invalidateCaps();
-        lazyItemHandler.invalidate();
+    public void setRemoved() {
+        super.setRemoved();
+        if (level != null) {
+            level.invalidateCapabilities(worldPosition);
+        }
     }
 
     @Override
-    protected void saveAdditional(CompoundTag tag) {
-        tag.put("inventory", itemHandler.serializeNBT());
-        super.saveAdditional(tag);
+    protected void saveAdditional(CompoundTag tag, HolderLookup.Provider registries) {
+        tag.put("inventory", itemHandler.serializeNBT(registries));
+        super.saveAdditional(tag, registries);
     }
 
     @Override
-    public void load(CompoundTag tag) {
-        super.load(tag);
-        itemHandler.deserializeNBT(tag.getCompound("inventory"));
+    protected void loadAdditional(CompoundTag tag, HolderLookup.Provider registries) {
+        super.loadAdditional(tag, registries);
+        itemHandler.deserializeNBT(registries, tag.getCompound("inventory"));
     }
 }

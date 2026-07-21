@@ -1,24 +1,29 @@
 package com.taczlevel.block;
 
+import com.mojang.serialization.MapCodec;
 import com.taczlevel.block.entity.GunUpgradeBlockEntity;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.BaseEntityBlock;
 import net.minecraft.world.level.block.RenderShape;
 import net.minecraft.world.level.block.entity.BlockEntity;
-import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.BlockHitResult;
-import net.minecraftforge.network.NetworkHooks;
 import org.jetbrains.annotations.Nullable;
 
 public class GunUpgradeBlock extends BaseEntityBlock {
-    public GunUpgradeBlock(BlockBehaviour.Properties properties) {
+    public static final MapCodec<GunUpgradeBlock> CODEC = simpleCodec(GunUpgradeBlock::new);
+
+    public GunUpgradeBlock(Properties properties) {
         super(properties);
+    }
+
+    @Override
+    public MapCodec<? extends GunUpgradeBlock> codec() {
+        return CODEC;
     }
 
     @Nullable
@@ -33,11 +38,11 @@ public class GunUpgradeBlock extends BaseEntityBlock {
     }
 
     @Override
-    public InteractionResult use(BlockState state, Level level, BlockPos pos, Player player, InteractionHand hand, BlockHitResult hit) {
+    public InteractionResult useWithoutItem(BlockState state, Level level, BlockPos pos, Player player, BlockHitResult hit) {
         if (!level.isClientSide) {
             BlockEntity be = level.getBlockEntity(pos);
             if (be instanceof GunUpgradeBlockEntity gunBE) {
-                NetworkHooks.openScreen((ServerPlayer) player, gunBE, pos);
+                player.openMenu(gunBE, pos);
             }
         }
         return InteractionResult.sidedSuccess(level.isClientSide);

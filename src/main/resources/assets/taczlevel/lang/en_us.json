@@ -158,5 +158,29 @@
   "config.taczlevel.notification_options.dummy_ammo.position": "Virtual Ammo Notification Position",
   "config.taczlevel.notification_options.dummy_ammo.position.tooltip": "Virtual ammo upgrade notification position: \"actionbar\", \"chat\", \"both\", or \"none\"",
   "config.taczlevel.notification_options.dummy_ammo.size": "Virtual Ammo Notification Size",
-  "config.taczlevel.notification_options.dummy_ammo.size.tooltip": "Virtual ammo upgrade text scale (0.5=small, 1.0=normal, 2.0=large)"
+  "config.taczlevel.notification_options.dummy_ammo.size.tooltip": "Virtual ammo upgrade text scale (0.5=small, 1.0=normal, 2.0=large)",
+  "gui.taczlevel.tooltip_weight": "Weight: -%s%% [Lv.%s/%s]",
+  "gui.taczlevel.weight": "Weight: -%s%%",
+  "gui.taczlevel.option_name_weight": "Weight Reduction",
+  "gui.taczlevel.upgrade_weight": "Weight",
+
+  "config.taczlevel.section.weight": "Weight Reduction",
+  "config.taczlevel.weight.max_level": "Max Level",
+  "config.taczlevel.weight.max_level.tooltip": "Maximum level for weight reduction",
+  "config.taczlevel.weight.weight_per_level": "Weight Reduction Per Level",
+  "config.taczlevel.weight.weight_per_level.tooltip": "Weight reduction percentage per level (e.g. 1.0 = -1% per level)",
+  "config.taczlevel.weight.weight_max_reduction": "Max Weight Reduction",
+  "config.taczlevel.weight.weight_max_reduction.tooltip": "Maximum weight reduction (1.0 = 100%)",
+
+  "config.taczlevel.section.auto_rules": "Auto Rules",
+  "config.taczlevel.auto_rules.auto_dummy_ammo": "Auto Virtual Ammo",
+  "config.taczlevel.auto_rules.auto_dummy_ammo.tooltip": "When enabled, automatically applies dummy ammo level 1 to new guns",
+
+  "command.taczlevel.set_weight": "Set %s's weight reduction level to %s",
+  "command.taczlevel.upgraded_weight": "Upgraded %s's weight reduction to level %s",
+
+  "config.taczlevel.notification_options.weight.position": "Weight Reduction Notification Position",
+  "config.taczlevel.notification_options.weight.position.tooltip": "Weight reduction upgrade notification position: \"actionbar\", \"chat\", \"both\", or \"none\"",
+  "config.taczlevel.notification_options.weight.size": "Weight Reduction Notification Size",
+  "config.taczlevel.notification_options.weight.size.tooltip": "Weight reduction upgrade text scale (0.5=small, 1.0=normal, 2.0=large)"
 }

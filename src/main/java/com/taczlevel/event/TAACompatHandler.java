@@ -1,6 +1,9 @@
 package com.taczlevel.event;
 
+import com.taczlevel.attribute.ModAttributes;
 import com.taczlevel.data.GunLevelManager;
+import net.minecraft.core.Holder;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.attributes.Attribute;
@@ -8,41 +11,50 @@ import net.minecraft.world.entity.ai.attributes.AttributeInstance;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
-import net.minecraftforge.common.util.Lazy;
-import net.minecraftforge.event.entity.living.LivingEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.ModList;
-import net.minecraftforge.registries.ForgeRegistries;
-
-import java.util.UUID;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.ModList;
+import net.neoforged.neoforge.event.tick.EntityTickEvent;
 
 public class TAACompatHandler {
 
     private static final boolean TAA_LOADED = ModList.get().isLoaded("taa");
 
-    private static final UUID RELOAD_UUID = UUID.fromString("a1b2c3d4-e5f6-7890-abcd-ef1234567890");
-    private static final UUID RECOIL_UUID = UUID.fromString("b2c3d4e5-f6a7-8901-bcde-f12345678901");
-    private static final UUID PEN_UUID = UUID.fromString("c3d4e5f6-a7b8-9012-cdef-123456789012");
-    private static final UUID FIRE_RATE_UUID = UUID.fromString("d4e5f6a7-b8c9-0123-defa-234567890123");
+    private static final ResourceLocation RELOAD_ID = ResourceLocation.fromNamespaceAndPath("taczlevel", "reload_upgrade");
+    private static final ResourceLocation RECOIL_ID = ResourceLocation.fromNamespaceAndPath("taczlevel", "recoil_upgrade");
+    private static final ResourceLocation PEN_ID = ResourceLocation.fromNamespaceAndPath("taczlevel", "pen_upgrade");
+    private static final ResourceLocation FIRE_RATE_ID = ResourceLocation.fromNamespaceAndPath("taczlevel", "fire_rate_upgrade");
+    private static final ResourceLocation WEIGHT_ID = ResourceLocation.fromNamespaceAndPath("taczlevel", "weight_upgrade");
 
-    private static final String MODIFIER_NAME = "TaczLevel Upgrade";
+    private Holder<Attribute> reloadAttr;
+    private Holder<Attribute> recoilAttr;
+    private Holder<Attribute> penAttr;
+    private Holder<Attribute> fireRateAttr;
+    private Holder<Attribute> weightAttr;
 
-    private final Lazy<Attribute> reloadAttr = Lazy.of(() -> getTaaAttribute("reload_time"));
-    private final Lazy<Attribute> recoilAttr = Lazy.of(() -> getTaaAttribute("recoil"));
-    private final Lazy<Attribute> penAttr = Lazy.of(() -> getTaaAttribute("armor_ignore"));
-    private final Lazy<Attribute> fireRateAttr = Lazy.of(() -> getTaaAttribute("rounds_per_minute"));
+    public TAACompatHandler() {
+        if (TAA_LOADED) {
+            reloadAttr = getTaaAttribute("reload_time");
+            recoilAttr = getTaaAttribute("recoil");
+            penAttr = getTaaAttribute("armor_ignore");
+            fireRateAttr = getTaaAttribute("rounds_per_minute");
+        } else {
+            reloadAttr = ModAttributes.RELOAD_TIME;
+            recoilAttr = ModAttributes.RECOIL;
+            penAttr = ModAttributes.ARMOR_IGNORE;
+            fireRateAttr = ModAttributes.ROUNDS_PER_MINUTE;
+        }
+        weightAttr = ModAttributes.WEIGHT;
+    }
 
-    @SuppressWarnings({"deprecation", "removal"})
-    private static Attribute getTaaAttribute(String path) {
-        return ForgeRegistries.ATTRIBUTES.getValue(new ResourceLocation("taa", path));
+    private static Holder<Attribute> getTaaAttribute(String path) {
+        return BuiltInRegistries.ATTRIBUTE.getHolder(ResourceLocation.fromNamespaceAndPath("taa", path)).orElse(null);
     }
 
     @SubscribeEvent
-    public void onLivingTick(LivingEvent.LivingTickEvent event) {
-        if (!TAA_LOADED) return;
-        if (event.getEntity().level().isClientSide) return;
+    public void onLivingTick(EntityTickEvent.Post event) {
         if (!(event.getEntity() instanceof Player player)) return;
-        if (event.getEntity().tickCount % 10 != 0) return;
+        if (player.level().isClientSide) return;
+        if (player.tickCount % 10 != 0) return;
 
         ItemStack gun = player.getMainHandItem();
 
@@ -57,49 +69,56 @@ public class TAACompatHandler {
         double reloadBonus = GunLevelManager.getReloadSpeedBonus(gun);
         if (reloadBonus > 0) {
             double factor = 1.0 / (1.0 + reloadBonus);
-            setAttributeModifier(player, reloadAttr.get(), RELOAD_UUID, factor, AttributeModifier.Operation.MULTIPLY_BASE);
+            setAttributeModifier(player, reloadAttr, RELOAD_ID, factor, AttributeModifier.Operation.ADD_MULTIPLIED_BASE);
         }
 
         double recoilBonus = GunLevelManager.getRecoilReduction(gun);
         if (recoilBonus > 0) {
             double factor = 1.0 - recoilBonus;
-            setAttributeModifier(player, recoilAttr.get(), RECOIL_UUID, factor, AttributeModifier.Operation.MULTIPLY_BASE);
+            setAttributeModifier(player, recoilAttr, RECOIL_ID, factor, AttributeModifier.Operation.ADD_MULTIPLIED_BASE);
         }
 
         double penBonus = GunLevelManager.getArmorPenetration(gun);
         if (penBonus > 0) {
             double factor = 1.0 + penBonus;
-            setAttributeModifier(player, penAttr.get(), PEN_UUID, factor, AttributeModifier.Operation.MULTIPLY_BASE);
+            setAttributeModifier(player, penAttr, PEN_ID, factor, AttributeModifier.Operation.ADD_MULTIPLIED_BASE);
         }
 
         double fireRateBonus = GunLevelManager.getFireRateBonus(gun);
         if (fireRateBonus > 0) {
             double factor = 1.0 + fireRateBonus;
-            setAttributeModifier(player, fireRateAttr.get(), FIRE_RATE_UUID, factor, AttributeModifier.Operation.MULTIPLY_BASE);
+            setAttributeModifier(player, fireRateAttr, FIRE_RATE_ID, factor, AttributeModifier.Operation.ADD_MULTIPLIED_BASE);
+        }
+
+        double weightReduction = GunLevelManager.getWeightReduction(gun);
+        if (weightReduction > 0) {
+            double factor = 1.0 - weightReduction;
+            setAttributeModifier(player, weightAttr, WEIGHT_ID, factor, AttributeModifier.Operation.ADD_MULTIPLIED_BASE);
         }
     }
 
     private void removeAttributes(Player player) {
-        removeModifier(player, reloadAttr.get(), RELOAD_UUID);
-        removeModifier(player, recoilAttr.get(), RECOIL_UUID);
-        removeModifier(player, penAttr.get(), PEN_UUID);
-        removeModifier(player, fireRateAttr.get(), FIRE_RATE_UUID);
+        removeModifier(player, reloadAttr, RELOAD_ID);
+        removeModifier(player, recoilAttr, RECOIL_ID);
+        removeModifier(player, penAttr, PEN_ID);
+        removeModifier(player, fireRateAttr, FIRE_RATE_ID);
+        removeModifier(player, weightAttr, WEIGHT_ID);
     }
 
-    private void setAttributeModifier(LivingEntity entity, Attribute attr, UUID uuid, double value, AttributeModifier.Operation operation) {
+    private void setAttributeModifier(LivingEntity entity, Holder<Attribute> attr, ResourceLocation id, double value, AttributeModifier.Operation operation) {
         if (attr == null) return;
         AttributeInstance instance = entity.getAttribute(attr);
         if (instance == null) return;
-        if (instance.getModifier(uuid) != null) {
-            instance.removeModifier(uuid);
+        if (instance.getModifier(id) != null) {
+            instance.removeModifier(id);
         }
-        instance.addTransientModifier(new AttributeModifier(uuid, MODIFIER_NAME, value - 1.0, operation));
+        instance.addTransientModifier(new AttributeModifier(id, value - 1.0, operation));
     }
 
-    private void removeModifier(LivingEntity entity, Attribute attr, UUID uuid) {
+    private void removeModifier(LivingEntity entity, Holder<Attribute> attr, ResourceLocation id) {
         if (attr == null) return;
         AttributeInstance instance = entity.getAttribute(attr);
         if (instance == null) return;
-        instance.removeModifier(uuid);
+        instance.removeModifier(id);
     }
 }

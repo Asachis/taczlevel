@@ -158,5 +158,29 @@
   "config.taczlevel.notification_options.dummy_ammo.position": "虚拟弹药提示位置",
   "config.taczlevel.notification_options.dummy_ammo.position.tooltip": "虚拟弹药升级提示位置：\"actionbar\"、\"chat\"、\"both\"、\"none\"",
   "config.taczlevel.notification_options.dummy_ammo.size": "虚拟弹药提示大小",
-  "config.taczlevel.notification_options.dummy_ammo.size.tooltip": "虚拟弹药升级提示文字缩放（0.5=小，1.0=正常，2.0=大）"
+  "config.taczlevel.notification_options.dummy_ammo.size.tooltip": "虚拟弹药升级提示文字缩放（0.5=小，1.0=正常，2.0=大）",
+  "gui.taczlevel.tooltip_weight": "重量: -%s%% [Lv.%s/%s]",
+  "gui.taczlevel.weight": "重量: -%s%%",
+  "gui.taczlevel.option_name_weight": "减重",
+  "gui.taczlevel.upgrade_weight": "减重",
+
+  "config.taczlevel.section.weight": "减重",
+  "config.taczlevel.weight.max_level": "最大等级",
+  "config.taczlevel.weight.max_level.tooltip": "减重属性的最大等级",
+  "config.taczlevel.weight.weight_per_level": "每级减重百分比",
+  "config.taczlevel.weight.weight_per_level.tooltip": "每级减少的重量百分比 (1.0 = -1%)",
+  "config.taczlevel.weight.weight_max_reduction": "最大减重上限",
+  "config.taczlevel.weight.weight_max_reduction.tooltip": "最大减重百分比 (1.0 = 100%)",
+
+  "config.taczlevel.section.auto_rules": "自动规则",
+  "config.taczlevel.auto_rules.auto_dummy_ammo": "自动虚拟弹药",
+  "config.taczlevel.auto_rules.auto_dummy_ammo.tooltip": "启用后，新获得的枪械会自动获得1级虚拟弹药",
+
+  "command.taczlevel.set_weight": "已将 %s 的减重等级设置为 %s",
+  "command.taczlevel.upgraded_weight": "已将 %s 的减重升级至 %s 级",
+
+  "config.taczlevel.notification_options.weight.position": "减重通知位置",
+  "config.taczlevel.notification_options.weight.position.tooltip": "减重升级通知显示位置: \"actionbar\", \"chat\", \"both\", 或 \"none\"",
+  "config.taczlevel.notification_options.weight.size": "减重通知大小",
+  "config.taczlevel.notification_options.weight.size.tooltip": "减重升级文字缩放 (0.5=小, 1.0=正常, 2.0=大)"
 }

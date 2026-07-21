@@ -1,8 +1,7 @@
 package com.taczlevel.gui;
 
-import com.taczlevel.TaczLevelMod;
 import com.taczlevel.data.GunLevelManager;
-import com.taczlevel.network.GunUpgradePacket;
+import com.taczlevel.network.GunUpgradePayload;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
@@ -11,9 +10,9 @@ import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.item.ItemStack;
+import net.neoforged.neoforge.network.PacketDistributor;
 
 public class CreativeGunUpgradeScreen extends AbstractContainerScreen<CreativeGunUpgradeMenu> {
-    // ── Theme Colors ──
     private static final int BG_MAIN       = 0xFF0a0a1a;
     private static final int BG_PANEL      = 0xFF0e0e24;
     private static final int CARD_INACTIVE = 0xFF12122e;
@@ -29,10 +28,10 @@ public class CreativeGunUpgradeScreen extends AbstractContainerScreen<CreativeGu
     private static final int BAR_TRACK     = 0xFF2a2a44;
 
     private static final int[] ACCENT = {
-        0xFF00d4aa, 0xFFff8800, 0xFFa855f7, 0xFFef4444, 0xFF44aaff,
+        0xFF00d4aa, 0xFFff8800, 0xFFa855f7, 0xFFef4444, 0xFF44aaff, 0xFF88dd88,
     };
     private static final int[] ACCENT_DIM = {
-        0xFF004d3f, 0xFF4d2a00, 0xFF3a1a55, 0xFF4d1515, 0xFF004d7f,
+        0xFF004d3f, 0xFF4d2a00, 0xFF3a1a55, 0xFF4d1515, 0xFF004d7f, 0xFF225522,
     };
 
     private static final int CARDS_X   = 74;
@@ -42,7 +41,7 @@ public class CreativeGunUpgradeScreen extends AbstractContainerScreen<CreativeGu
     private static final int CARD_GAP  = 2;
     private static final int BTN_W     = 42;
     private static final int BTN_H     = 12;
-    private static final int OPTIONS   = 5;
+    private static final int OPTIONS   = 6;
 
     private static final int EXP_TEXT_Y = 128;
     private static final int EXP_BAR_Y  = 134;
@@ -89,8 +88,6 @@ public class CreativeGunUpgradeScreen extends AbstractContainerScreen<CreativeGu
                     : Component.translatable("gui.taczlevel.upgrade_" + getKey(i)));
         }
     }
-
-    // ── Rendering ──
 
     @Override
     protected void renderBg(GuiGraphics gui, float partialTick, int mx, int my) {
@@ -257,8 +254,6 @@ public class CreativeGunUpgradeScreen extends AbstractContainerScreen<CreativeGu
         renderTooltip(gui, mx, my);
     }
 
-    // ── Helpers ──
-
     private static String getKey(int opt) {
         return switch (opt) {
             case 0 -> "reload";
@@ -266,17 +261,15 @@ public class CreativeGunUpgradeScreen extends AbstractContainerScreen<CreativeGu
             case 2 -> "pen";
             case 3 -> "fire_rate";
             case 4 -> "dummy_ammo";
+            case 5 -> "weight";
             default -> "reload";
         };
     }
 
     private void sendUpgrade(int opt) {
-        TaczLevelMod.CHANNEL.sendToServer(
-                new GunUpgradePacket(menu.containerId, opt,
-                        menu.getBlockEntity().getBlockPos().asLong()));
+        PacketDistributor.sendToServer(new GunUpgradePayload(
+                menu.containerId, opt, menu.getBlockEntity().getBlockPos()));
     }
-
-    // ── Modern Flat Button ──
 
     private static class FlatButton extends Button {
         private final int accentColor;

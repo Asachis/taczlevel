@@ -5,7 +5,9 @@ import com.taczlevel.config.ModConfig;
 import com.taczlevel.data.GunLevelManager;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.world.item.component.CustomData;
 import net.minecraft.network.chat.Component;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
@@ -16,13 +18,13 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.projectile.Projectile;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.entity.item.ItemEntity;
-import net.minecraftforge.event.entity.EntityJoinLevelEvent;
-import net.minecraftforge.event.entity.living.LivingDeathEvent;
-import net.minecraftforge.event.entity.living.LivingHurtEvent;
-import net.minecraftforge.event.entity.player.ItemTooltipEvent;
-import net.minecraftforge.event.entity.player.PlayerEvent;
-import net.minecraftforge.event.entity.living.LivingEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.neoforged.neoforge.event.entity.EntityJoinLevelEvent;
+import net.neoforged.neoforge.event.entity.living.LivingDamageEvent;
+import net.neoforged.neoforge.event.entity.living.LivingDeathEvent;
+import net.neoforged.neoforge.event.entity.player.ItemTooltipEvent;
+import net.neoforged.neoforge.event.entity.player.PlayerEvent;
+import net.neoforged.neoforge.event.tick.EntityTickEvent;
+import net.neoforged.bus.api.SubscribeEvent;
 
 import java.util.List;
 
@@ -50,7 +52,7 @@ public class GunEvents {
     private void notifyOptionLevelUp(Player player, int leveledMask, ItemStack gun) {
         if (leveledMask == 0) return;
 
-        for (int i = 0; i < 5; i++) {
+        for (int i = 0; i < 6; i++) {
             if ((leveledMask & (1 << i)) != 0) {
                 int newLevel = GunLevelManager.getLevel(gun, i);
                 String pos = ModConfig.OPTION_NOTIFICATION.getPosition(i);
@@ -109,14 +111,14 @@ public class GunEvents {
     }
 
     @SubscribeEvent
-    public void onLivingHurt(LivingHurtEvent event) {
+    public void onLivingDamagePost(LivingDamageEvent.Post event) {
         Player player = getPlayerSource(event.getSource());
         if (player == null) return;
         ItemStack gun = player.getMainHandItem();
         if (!isTaczGun(gun)) return;
 
         if (GunLevelManager.hasAnyUpgrade(gun)) {
-            float dmg = event.getAmount();
+            float dmg = event.getNewDamage();
             if (dmg > 0.0f) {
                 int dmgExp = Math.max(1, (int) (dmg * ModConfig.XP.damageExpMultiplier.get().floatValue()));
                 int result;
@@ -164,13 +166,14 @@ public class GunEvents {
             {recoilLvl, GunLevelManager.getMaxLevel()},
             {penLvl, GunLevelManager.getMaxLevel()},
             {fireRateLvl, GunLevelManager.getMaxFireRateLevel()},
-            {GunLevelManager.getDummyAmmoLevel(stack), ModConfig.DUMMY_AMMO.maxLevel.get()}
+            {GunLevelManager.getDummyAmmoLevel(stack), ModConfig.DUMMY_AMMO.maxLevel.get()},
+            {GunLevelManager.getWeightLevel(stack), ModConfig.WEIGHT.maxLevel.get()}
         };
         String[] keys = {"gui.taczlevel.tooltip_reload", "gui.taczlevel.tooltip_recoil",
                 "gui.taczlevel.tooltip_pen", "gui.taczlevel.tooltip_fire_rate",
-                "gui.taczlevel.tooltip_dummy_ammo"};
+                "gui.taczlevel.tooltip_dummy_ammo", "gui.taczlevel.tooltip_weight"};
 
-        for (int i = 0; i < 5; i++) {
+        for (int i = 0; i < 6; i++) {
             int lvl = stats[i][0];
             int max = stats[i][1];
             if (lvl > 0) {
@@ -195,27 +198,33 @@ public class GunEvents {
     @SubscribeEvent
     public void onItemEntityJoin(EntityJoinLevelEvent event) {
         if (event.getLevel().isClientSide()) return;
-        if (!ModConfig.GAME_RULES.startWithUpgrades.get()) return;
         if (!(event.getEntity() instanceof ItemEntity item)) return;
         ItemStack stack = item.getItem();
-        if (isTaczGun(stack)) {
+        if (!isTaczGun(stack)) return;
+        if (ModConfig.GAME_RULES.startWithUpgrades.get()) {
             GunLevelManager.initDefaultUpgrades(stack);
+        }
+        if (ModConfig.AUTO_RULES.autoDummyAmmo.get() && GunLevelManager.getDummyAmmoLevel(stack) == 0) {
+            GunLevelManager.setDummyAmmoLevel(stack, 1);
         }
     }
 
     @SubscribeEvent
     public void onItemCrafted(PlayerEvent.ItemCraftedEvent event) {
-        if (!ModConfig.GAME_RULES.startWithUpgrades.get()) return;
         ItemStack stack = event.getCrafting();
-        if (isTaczGun(stack)) {
+        if (!isTaczGun(stack)) return;
+        if (ModConfig.GAME_RULES.startWithUpgrades.get()) {
             GunLevelManager.initDefaultUpgrades(stack);
+        }
+        if (ModConfig.AUTO_RULES.autoDummyAmmo.get() && GunLevelManager.getDummyAmmoLevel(stack) == 0) {
+            GunLevelManager.setDummyAmmoLevel(stack, 1);
         }
     }
 
     @SubscribeEvent
-    public void onLivingTick(LivingEvent.LivingTickEvent event) {
-        if (event.getEntity().level().isClientSide) return;
-        LivingEntity entity = event.getEntity();
+    public void onPlayerTick(EntityTickEvent.Post event) {
+        if (!(event.getEntity() instanceof LivingEntity entity)) return;
+        if (entity.level().isClientSide) return;
         if (entity.tickCount % 5 != 0) return;
 
         ItemStack gun = entity.getMainHandItem();
@@ -227,17 +236,18 @@ public class GunEvents {
         int maxLevel = ModConfig.DUMMY_AMMO.maxLevel.get();
 
         if (level >= maxLevel) {
-            gun.getOrCreateTag().putInt("DummyAmmo", 9999);
+            setDummyAmmoTag(gun, "DummyAmmo", 9999);
             return;
         }
 
         int maxPool = ModConfig.DUMMY_AMMO.getMaxPool(level);
-        CompoundTag rootTag = gun.getOrCreateTag();
+        CompoundTag rootTag = getOrCreateDummyAmmoTag(gun);
         int current = rootTag.getInt("DummyAmmo");
 
         if (current >= maxPool) {
             if (current > maxPool) {
                 rootTag.putInt("DummyAmmo", maxPool);
+                saveDummyAmmoTag(gun, rootTag);
             }
             return;
         }
@@ -248,6 +258,7 @@ public class GunEvents {
         if (cooldown > 0) {
             rootTag.putInt("DummyAmmoRegenCooldown", Math.max(0, cooldown - 5));
             rootTag.putInt("DummyAmmoLastTick", current);
+            saveDummyAmmoTag(gun, rootTag);
             return;
         }
 
@@ -255,6 +266,7 @@ public class GunEvents {
         if (current < lastTick) {
             rootTag.putInt("DummyAmmoRegenCooldown", delay);
             rootTag.putInt("DummyAmmoLastTick", current);
+            saveDummyAmmoTag(gun, rootTag);
             return;
         }
         rootTag.putInt("DummyAmmoLastTick", current);
@@ -266,6 +278,21 @@ public class GunEvents {
         int newAmmo = Math.min(maxPool, current + (int) regen);
         rootTag.putInt("DummyAmmo", newAmmo);
         rootTag.putInt("DummyAmmoLastTick", newAmmo);
+        saveDummyAmmoTag(gun, rootTag);
+    }
+
+    private static CompoundTag getOrCreateDummyAmmoTag(ItemStack stack) {
+        return stack.getOrDefault(DataComponents.CUSTOM_DATA, CustomData.EMPTY).copyTag();
+    }
+
+    private static void saveDummyAmmoTag(ItemStack stack, CompoundTag tag) {
+        stack.set(DataComponents.CUSTOM_DATA, CustomData.of(tag));
+    }
+
+    private static void setDummyAmmoTag(ItemStack stack, String key, int value) {
+        CompoundTag tag = getOrCreateDummyAmmoTag(stack);
+        tag.putInt(key, value);
+        saveDummyAmmoTag(stack, tag);
     }
 
     private int getExpForMob(LivingEntity entity) {

@@ -22,6 +22,8 @@ public class ClothConfigScreen {
         buildSound(builder, eb);
         buildOptionNotifications(builder, eb);
         buildDummyAmmo(builder, eb);
+        buildWeight(builder, eb);
+        buildAutoRules(builder, eb);
 
         return builder.build();
     }
@@ -126,8 +128,8 @@ public class ClothConfigScreen {
     private static void buildOptionNotifications(ConfigBuilder builder, ConfigEntryBuilder eb) {
         ConfigCategory cat = builder.getOrCreateCategory(Component.translatable("config.taczlevel.section.notification_options"));
 
-        String[] optionKeys = {"reload", "recoil", "penetration", "fire_rate", "dummy_ammo"};
-        for (int i = 0; i < 5; i++) {
+        String[] optionKeys = {"reload", "recoil", "penetration", "fire_rate", "dummy_ammo", "weight"};
+        for (int i = 0; i < 6; i++) {
             String base = "config.taczlevel.notification_options." + optionKeys[i];
             int idx = i;
 
@@ -164,6 +166,27 @@ public class ClothConfigScreen {
                 ModConfig.DUMMY_AMMO.regenPerSecondPerLevel.get(), 5.0, v -> ModConfig.DUMMY_AMMO.regenPerSecondPerLevel.set(v));
         addIntEntry(cat, eb, "config.taczlevel.dummy_ammo.regen_delay_ticks",
                 ModConfig.DUMMY_AMMO.regenDelayTicks.get(), 40, v -> ModConfig.DUMMY_AMMO.regenDelayTicks.set(v));
+    }
+
+    private static void buildWeight(ConfigBuilder builder, ConfigEntryBuilder eb) {
+        ConfigCategory cat = builder.getOrCreateCategory(Component.translatable("config.taczlevel.section.weight"));
+        addIntEntry(cat, eb, "config.taczlevel.weight.max_level",
+                ModConfig.WEIGHT.maxLevel.get(), 100, v -> ModConfig.WEIGHT.maxLevel.set(v));
+        addDoubleEntry(cat, eb, "config.taczlevel.weight.weight_per_level",
+                ModConfig.WEIGHT.weightPerLevel.get(), 1.0, v -> ModConfig.WEIGHT.weightPerLevel.set(v));
+        addDoubleEntry(cat, eb, "config.taczlevel.weight.weight_max_reduction",
+                ModConfig.WEIGHT.weightMaxReduction.get(), 1.0, v -> ModConfig.WEIGHT.weightMaxReduction.set(v));
+    }
+
+    private static void buildAutoRules(ConfigBuilder builder, ConfigEntryBuilder eb) {
+        ConfigCategory cat = builder.getOrCreateCategory(Component.translatable("config.taczlevel.section.auto_rules"));
+        cat.addEntry(eb.startBooleanToggle(
+                        Component.translatable("config.taczlevel.auto_rules.auto_dummy_ammo"),
+                        ModConfig.AUTO_RULES.autoDummyAmmo.get())
+                .setDefaultValue(false)
+                .setTooltip(Component.translatable("config.taczlevel.auto_rules.auto_dummy_ammo.tooltip"))
+                .setSaveConsumer(v -> ModConfig.AUTO_RULES.autoDummyAmmo.set(v))
+                .build());
     }
 
     private static void addIntEntry(ConfigCategory cat, ConfigEntryBuilder eb,

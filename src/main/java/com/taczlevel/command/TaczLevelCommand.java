@@ -17,17 +17,15 @@ import net.minecraft.world.item.ItemStack;
 
 public class TaczLevelCommand {
 
-    private static final String[] OPTIONS = {"reload", "recoil", "pen", "fire_rate", "dummy_ammo", "all"};
+    private static final String[] OPTIONS = {"reload", "recoil", "pen", "fire_rate", "dummy_ammo", "weight", "all"};
 
     public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
         dispatcher.register(Commands.literal("taczlevel")
                 .requires(source -> source.hasPermission(2))
 
-                // help
                 .then(Commands.literal("help")
                         .executes(TaczLevelCommand::help))
 
-                // set <reload|recoil|pen|fire_rate|dummy_ammo|all> <level> [player]
                 .then(Commands.literal("set")
                         .then(Commands.literal("reload")
                                 .then(Commands.argument("level", IntegerArgumentType.integer(0, GunLevelManager.getMaxLevel()))
@@ -59,6 +57,12 @@ public class TaczLevelCommand {
                                         .then(Commands.argument("player", EntityArgument.player())
                                                 .executes(ctx -> setLevel(ctx, 4, IntegerArgumentType.getInteger(ctx, "level"),
                                                         EntityArgument.getPlayer(ctx, "player"))))))
+                        .then(Commands.literal("weight")
+                                .then(Commands.argument("level", IntegerArgumentType.integer(0, ModConfig.WEIGHT.maxLevel.get()))
+                                        .executes(ctx -> setLevel(ctx, 5, IntegerArgumentType.getInteger(ctx, "level"), null))
+                                        .then(Commands.argument("player", EntityArgument.player())
+                                                .executes(ctx -> setLevel(ctx, 5, IntegerArgumentType.getInteger(ctx, "level"),
+                                                        EntityArgument.getPlayer(ctx, "player"))))))
                         .then(Commands.literal("all")
                                 .then(Commands.argument("level", IntegerArgumentType.integer(0, GunLevelManager.getMaxLevel()))
                                         .executes(ctx -> setAllLevels(ctx, null, IntegerArgumentType.getInteger(ctx, "level")))
@@ -67,7 +71,6 @@ public class TaczLevelCommand {
                                                         EntityArgument.getPlayer(ctx, "player"),
                                                         IntegerArgumentType.getInteger(ctx, "level")))))))
 
-                // upgrade <reload|recoil|pen|fire_rate|dummy_ammo|all> [player]
                 .then(Commands.literal("upgrade")
                         .then(Commands.literal("reload")
                                 .executes(ctx -> upgrade(ctx, 0, null))
@@ -89,18 +92,20 @@ public class TaczLevelCommand {
                                 .executes(ctx -> upgrade(ctx, 4, null))
                                 .then(Commands.argument("player", EntityArgument.player())
                                         .executes(ctx -> upgrade(ctx, 4, EntityArgument.getPlayer(ctx, "player")))))
+                        .then(Commands.literal("weight")
+                                .executes(ctx -> upgrade(ctx, 5, null))
+                                .then(Commands.argument("player", EntityArgument.player())
+                                        .executes(ctx -> upgrade(ctx, 5, EntityArgument.getPlayer(ctx, "player")))))
                         .then(Commands.literal("all")
                                 .executes(ctx -> upgradeAll(ctx, null))
                                 .then(Commands.argument("player", EntityArgument.player())
                                         .executes(ctx -> upgradeAll(ctx, EntityArgument.getPlayer(ctx, "player"))))))
 
-                // get [player]
                 .then(Commands.literal("get")
                         .executes(ctx -> getLevels(ctx, null))
                         .then(Commands.argument("player", EntityArgument.player())
                                 .executes(ctx -> getLevels(ctx, EntityArgument.getPlayer(ctx, "player")))))
 
-                // autoUpgrade <true|false>
                 .then(Commands.literal("autoUpgrade")
                         .then(Commands.argument("enabled", BoolArgumentType.bool())
                                 .executes(TaczLevelCommand::setAutoUpgrade)))
@@ -116,8 +121,6 @@ public class TaczLevelCommand {
         return player.getMainHandItem();
     }
 
-    // === Help ===
-
     private static int help(CommandContext<CommandSourceStack> ctx) {
         var src = ctx.getSource();
         src.sendSuccess(() -> Component.literal("§6=== TaczLevel Commands ==="), false);
@@ -126,7 +129,7 @@ public class TaczLevelCommand {
         src.sendSuccess(() -> Component.literal("§e/taczlevel upgrade <option> [player]§r - Upgrade an option by 1 level"), false);
         src.sendSuccess(() -> Component.literal("§e/taczlevel get [player]§r - View current levels"), false);
         src.sendSuccess(() -> Component.literal("§e/taczlevel autoUpgrade <true/false>§r - Toggle auto-upgrade on new guns"), false);
-        src.sendSuccess(() -> Component.literal("§7Options: reload, recoil, pen, fire_rate, dummy_ammo, all"), false);
+        src.sendSuccess(() -> Component.literal("§7Options: reload, recoil, pen, fire_rate, dummy_ammo, weight, all"), false);
         src.sendSuccess(() -> Component.literal("§7[player] defaults to sender if omitted"), false);
         return 1;
     }
@@ -138,8 +141,6 @@ public class TaczLevelCommand {
                 "§eAuto-upgrade " + (enabled ? "§aenabled" : "§cdisabled") + "§r"), true);
         return 1;
     }
-
-    // === Set ===
 
     private static int setLevel(CommandContext<CommandSourceStack> ctx, int option, int level,
                                 ServerPlayer target) throws CommandSyntaxException {
@@ -175,6 +176,11 @@ public class TaczLevelCommand {
                 ctx.getSource().sendSuccess(() -> Component.translatable("command.taczlevel.set_dummy_ammo",
                         player.getName(), level), true);
             }
+            case 5 -> {
+                GunLevelManager.setWeightLevel(gun, level);
+                ctx.getSource().sendSuccess(() -> Component.translatable("command.taczlevel.set_dummy_ammo",
+                        player.getName(), level), true);
+            }
         }
         GunLevelManager.clearActiveSlot(gun);
         return 1;
@@ -193,12 +199,11 @@ public class TaczLevelCommand {
         GunLevelManager.setPenLevel(gun, level);
         GunLevelManager.setFireRateLevel(gun, level);
         GunLevelManager.setDummyAmmoLevel(gun, level);
+        GunLevelManager.setWeightLevel(gun, level);
         GunLevelManager.clearActiveSlot(gun);
         ctx.getSource().sendSuccess(() -> Component.translatable("command.taczlevel.set_all", player.getName(), level), true);
         return 1;
     }
-
-    // === Upgrade ===
 
     private static int upgrade(CommandContext<CommandSourceStack> ctx, int option,
                                ServerPlayer target) throws CommandSyntaxException {
@@ -254,6 +259,15 @@ public class TaczLevelCommand {
                 ctx.getSource().sendSuccess(() -> Component.translatable("command.taczlevel.upgraded_dummy_ammo",
                         player.getName(), GunLevelManager.getDummyAmmoLevel(gun)), true);
             }
+            case 5 -> {
+                if (GunLevelManager.getWeightLevel(gun) >= ModConfig.WEIGHT.maxLevel.get()) {
+                    ctx.getSource().sendFailure(Component.translatable("command.taczlevel.max_level"));
+                    return 0;
+                }
+                GunLevelManager.upgradeWeight(gun);
+                ctx.getSource().sendSuccess(() -> Component.translatable("command.taczlevel.upgraded_dummy_ammo",
+                        player.getName(), GunLevelManager.getWeightLevel(gun)), true);
+            }
         }
         return 1;
     }
@@ -287,6 +301,10 @@ public class TaczLevelCommand {
             GunLevelManager.upgradeDummyAmmo(gun);
             upgraded = true;
         }
+        if (GunLevelManager.getWeightLevel(gun) < ModConfig.WEIGHT.maxLevel.get()) {
+            GunLevelManager.upgradeWeight(gun);
+            upgraded = true;
+        }
         if (!upgraded) {
             ctx.getSource().sendFailure(Component.translatable("command.taczlevel.max_level"));
             return 0;
@@ -294,8 +312,6 @@ public class TaczLevelCommand {
         ctx.getSource().sendSuccess(() -> Component.translatable("command.taczlevel.upgraded_all", player.getName()), true);
         return 1;
     }
-
-    // === Get ===
 
     private static int getLevels(CommandContext<CommandSourceStack> ctx,
                                  ServerPlayer target) throws CommandSyntaxException {
@@ -310,6 +326,7 @@ public class TaczLevelCommand {
         int p = GunLevelManager.getPenLevel(gun);
         int f = GunLevelManager.getFireRateLevel(gun);
         int d = GunLevelManager.getDummyAmmoLevel(gun);
+        int w = GunLevelManager.getWeightLevel(gun);
         int exp = GunLevelManager.getExp(gun);
         int next = GunLevelManager.getExpToNext(gun);
 
@@ -330,6 +347,9 @@ public class TaczLevelCommand {
         src.sendSuccess(() -> Component.translatable("gui.taczlevel.tooltip_dummy_ammo",
                 GunLevelManager.getDummyAmmoMaxPool(gun), d,
                 ModConfig.DUMMY_AMMO.maxLevel.get()), false);
+        src.sendSuccess(() -> Component.translatable("gui.taczlevel.tooltip_weight",
+                String.format("%.0f", GunLevelManager.getWeightReduction(gun) * 100), w,
+                ModConfig.WEIGHT.maxLevel.get()), false);
         if (next > 0) {
             src.sendSuccess(() -> Component.translatable("gui.taczlevel.tooltip_exp", exp, next), false);
         }

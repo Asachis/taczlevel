@@ -1,0 +1,33 @@
+modLoader = "javafml"
+loaderVersion = "[1,)"
+license = "MIT"
+logoFile = "logo.png"
+issueTrackerURL = "https://github.com/Asachis/taczlevel/issues"
+
+[[mods]]
+modId = "${id}"
+version = "${version}"
+displayName = "${name}"
+authors = "Asachis"
+description = "A gun leveling expansion for Timeless and Classics Zero (TACZ). Weapons earn XP through combat and level up to enhance reload speed, recoil control, armor penetration, and fire rate. Includes two upgrade stations: a survival station with progression gates and a creative station for testing."
+
+[[dependencies."${id}"]]
+modId = "neoforge"
+type = "REQUIRED"
+versionRange = "${loader_version}"
+ordering = "NONE"
+side = "BOTH"
+
+[[dependencies."${id}"]]
+modId = "minecraft"
+type = "REQUIRED"
+versionRange = "${minecraft_version}"
+ordering = "NONE"
+side = "BOTH"
+
+[[dependencies."${id}"]]
+modId = "tacz"
+type = "REQUIRED"
+versionRange = "[1.0,)"
+ordering = "NONE"
+side = "BOTH"

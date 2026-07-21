@@ -1,0 +1,15 @@
+[versions]
+neoforge = "21.1.93"
+neoforge-range = "[21,)"
+moddev = "2.0.74"
+parchment = "2024.11.17"
+minecraft = "1.21.1"
+minecraft-range = "[1.21.1]"
+tacz = "1.1.8-hotfix-r3"
+cloth-config = "15.0.140"
+
+[libraries]
+me-shedaniel-cloth-config-neoforge = { module = "me.shedaniel.cloth:cloth-config-neoforge", version.ref = "cloth-config" }
+
+[plugins]
+moddev = { id = "net.neoforged.moddev", version.ref = "moddev" }

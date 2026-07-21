@@ -6,14 +6,14 @@ import com.taczlevel.block.entity.GunUpgradeBlockEntity;
 import com.taczlevel.config.ModConfig;
 import com.taczlevel.data.GunLevelManager;
 import com.taczlevel.event.GunEvents;
-import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.ContainerLevelAccess;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
-import net.minecraftforge.items.SlotItemHandler;
+import net.neoforged.neoforge.items.SlotItemHandler;
 
 public class GunUpgradeMenu extends AbstractContainerMenu {
     private final GunUpgradeBlockEntity blockEntity;
@@ -37,15 +37,13 @@ public class GunUpgradeMenu extends AbstractContainerMenu {
         }
     }
 
-    public GunUpgradeMenu(int id, Inventory inv, FriendlyByteBuf buf) {
+    public GunUpgradeMenu(int id, Inventory inv, RegistryFriendlyByteBuf buf) {
         this(id, inv, (GunUpgradeBlockEntity) inv.player.level().getBlockEntity(buf.readBlockPos()));
     }
 
     public GunUpgradeBlockEntity getBlockEntity() {
         return blockEntity;
     }
-
-    // --- Single-upgrade mode queries ---
 
     public int getActiveSlot() {
         ItemStack gun = blockEntity.getItemHandler().getStackInSlot(GunUpgradeBlockEntity.GUN_SLOT);

@@ -1,8 +1,7 @@
 package com.taczlevel.gui;
 
-import com.taczlevel.TaczLevelMod;
 import com.taczlevel.data.GunLevelManager;
-import com.taczlevel.network.GunUpgradePacket;
+import com.taczlevel.network.GunUpgradePayload;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
@@ -11,6 +10,7 @@ import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.item.ItemStack;
+import net.neoforged.neoforge.network.PacketDistributor;
 
 public class GunUpgradeScreen extends AbstractContainerScreen<GunUpgradeMenu> {
     private static final int BG_MAIN       = 0xFF0a0a1a;
@@ -28,10 +28,10 @@ public class GunUpgradeScreen extends AbstractContainerScreen<GunUpgradeMenu> {
     private static final int BAR_TRACK     = 0xFF2a2a44;
 
     private static final int[] ACCENT = {
-        0xFF00d4aa, 0xFFff8800, 0xFFa855f7, 0xFFef4444, 0xFF44aaff,
+        0xFF00d4aa, 0xFFff8800, 0xFFa855f7, 0xFFef4444, 0xFF44aaff, 0xFF88dd88,
     };
     private static final int[] ACCENT_DIM = {
-        0xFF004d3f, 0xFF4d2a00, 0xFF3a1a55, 0xFF4d1515, 0xFF004d7f,
+        0xFF004d3f, 0xFF4d2a00, 0xFF3a1a55, 0xFF4d1515, 0xFF004d7f, 0xFF225522,
     };
 
     private static final int CARDS_X   = 74;
@@ -41,7 +41,7 @@ public class GunUpgradeScreen extends AbstractContainerScreen<GunUpgradeMenu> {
     private static final int CARD_GAP  = 2;
     private static final int BTN_W     = 50;
     private static final int BTN_H     = 12;
-    private static final int OPTIONS   = 5;
+    private static final int OPTIONS   = 6;
 
     private static final int EXP_TEXT_Y = 128;
     private static final int EXP_BAR_Y  = 134;
@@ -83,7 +83,6 @@ public class GunUpgradeScreen extends AbstractContainerScreen<GunUpgradeMenu> {
             boolean activated = hasGun && GunLevelManager.isActivated(gun, i);
 
             if (activeSlot == -1) {
-                // No active upgrade — can activate any non-maxed option
                 actionButtons[i].active = hasGun && !activated && !maxed;
                 if (maxed) {
                     actionButtons[i].setMessage(Component.translatable("gui.taczlevel.status_maxed"));
@@ -91,7 +90,6 @@ public class GunUpgradeScreen extends AbstractContainerScreen<GunUpgradeMenu> {
                     actionButtons[i].setMessage(Component.translatable("gui.taczlevel.activate"));
                 }
             } else if (activeSlot == i) {
-                // This is the active upgrade
                 if (maxed) {
                     actionButtons[i].active = false;
                     actionButtons[i].setMessage(Component.translatable("gui.taczlevel.status_maxed"));
@@ -103,7 +101,6 @@ public class GunUpgradeScreen extends AbstractContainerScreen<GunUpgradeMenu> {
                     actionButtons[i].setMessage(Component.translatable("gui.taczlevel.status_active"));
                 }
             } else {
-                // Another upgrade is active
                 actionButtons[i].active = false;
                 if (maxed) {
                     actionButtons[i].setMessage(Component.translatable("gui.taczlevel.status_maxed"));
@@ -295,9 +292,8 @@ public class GunUpgradeScreen extends AbstractContainerScreen<GunUpgradeMenu> {
     }
 
     private void sendUpgrade(int opt) {
-        TaczLevelMod.CHANNEL.sendToServer(
-                new GunUpgradePacket(menu.containerId, opt,
-                        menu.getBlockEntity().getBlockPos().asLong()));
+        PacketDistributor.sendToServer(new GunUpgradePayload(
+                menu.containerId, opt, menu.getBlockEntity().getBlockPos()));
     }
 
     private static class FlatButton extends Button {

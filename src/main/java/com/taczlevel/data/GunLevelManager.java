@@ -1,8 +1,10 @@
 package com.taczlevel.data;
 
 import com.taczlevel.config.ModConfig;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.component.CustomData;
 
 public class GunLevelManager {
     private static final String TAG = "taczlevel";
@@ -11,15 +13,45 @@ public class GunLevelManager {
     private static final String PEN_LEVEL_TAG = "pen_level";
     private static final String FIRE_RATE_LEVEL_TAG = "fire_rate_level";
     private static final String DUMMY_AMMO_LEVEL_TAG = "dummy_ammo_level";
+    private static final String WEIGHT_LEVEL_TAG = "weight_level";
     private static final String EXP_TAG = "exp";
     private static final String ACTIVE_SLOT_TAG = "active_slot";
     private static final String GATE_UNLOCKED_TAG = "gate_unlocked";
 
     private static final String[] LEVEL_TAGS = {
         RELOAD_LEVEL_TAG, RECOIL_LEVEL_TAG, PEN_LEVEL_TAG,
-        FIRE_RATE_LEVEL_TAG, DUMMY_AMMO_LEVEL_TAG
+        FIRE_RATE_LEVEL_TAG, DUMMY_AMMO_LEVEL_TAG, WEIGHT_LEVEL_TAG
     };
-    private static final int OPTION_COUNT = 5;
+    private static final int OPTION_COUNT = 6;
+
+    private static CompoundTag getData(ItemStack stack) {
+        return stack.getOrDefault(DataComponents.CUSTOM_DATA, CustomData.EMPTY).copyTag().getCompound(TAG);
+    }
+
+    private static void setData(ItemStack stack, CompoundTag data) {
+        CompoundTag root = stack.getOrDefault(DataComponents.CUSTOM_DATA, CustomData.EMPTY).copyTag();
+        root.put(TAG, data);
+        stack.set(DataComponents.CUSTOM_DATA, CustomData.of(root));
+    }
+
+    private static int getTagInt(ItemStack stack, String key) {
+        return getData(stack).getInt(key);
+    }
+
+    private static void setTagInt(ItemStack stack, String key, int value) {
+        CompoundTag data = getData(stack);
+        data.putInt(key, value);
+        setData(stack, data);
+    }
+
+    private static boolean incrementTag(ItemStack stack, String key, int max) {
+        CompoundTag data = getData(stack);
+        int level = data.getInt(key);
+        if (level >= max) return false;
+        data.putInt(key, level + 1);
+        setData(stack, data);
+        return true;
+    }
 
     public static int getMaxLevel() {
         return ModConfig.STATS.maxLevel.get();
@@ -32,58 +64,50 @@ public class GunLevelManager {
     private static int getMaxLevelByIndex(int i) {
         if (i < 3) return getMaxLevel();
         if (i == 3) return getMaxFireRateLevel();
-        return ModConfig.DUMMY_AMMO.maxLevel.get();
+        if (i == 4) return ModConfig.DUMMY_AMMO.maxLevel.get();
+        return ModConfig.WEIGHT.maxLevel.get();
     }
 
     public static int getGateLevel() {
         return Math.max(1, getMaxLevel() / 2);
     }
 
-    // === Active slot (regular station single-upgrade mode) ===
-
     public static int getActiveSlot(ItemStack stack) {
-        CompoundTag tag = stack.getTag();
-        if (tag != null && tag.contains(TAG)) {
-            CompoundTag data = tag.getCompound(TAG);
-            if (data.contains(ACTIVE_SLOT_TAG)) {
-                return data.getInt(ACTIVE_SLOT_TAG);
-            }
+        CompoundTag data = getData(stack);
+        if (data.contains(ACTIVE_SLOT_TAG)) {
+            return data.getInt(ACTIVE_SLOT_TAG);
         }
         return -1;
     }
 
     public static void setActiveSlot(ItemStack stack, int slot) {
-        CompoundTag tag = stack.getOrCreateTagElement(TAG);
-        tag.putInt(ACTIVE_SLOT_TAG, slot);
+        CompoundTag data = getData(stack);
+        data.putInt(ACTIVE_SLOT_TAG, slot);
+        setData(stack, data);
     }
 
     public static void clearActiveSlot(ItemStack stack) {
-        CompoundTag tag = stack.getOrCreateTagElement(TAG);
-        tag.remove(ACTIVE_SLOT_TAG);
+        CompoundTag data = getData(stack);
+        data.remove(ACTIVE_SLOT_TAG);
+        setData(stack, data);
     }
 
     public static boolean isGateUnlocked(ItemStack stack, int optionIndex) {
-        CompoundTag tag = stack.getTag();
-        if (tag != null && tag.contains(TAG)) {
-            int mask = tag.getCompound(TAG).getInt(GATE_UNLOCKED_TAG);
-            return (mask & (1 << optionIndex)) != 0;
-        }
-        return false;
+        return (getData(stack).getInt(GATE_UNLOCKED_TAG) & (1 << optionIndex)) != 0;
     }
 
     public static void unlockGate(ItemStack stack, int optionIndex) {
-        CompoundTag tag = stack.getOrCreateTagElement(TAG);
-        int mask = tag.getInt(GATE_UNLOCKED_TAG);
+        CompoundTag data = getData(stack);
+        int mask = data.getInt(GATE_UNLOCKED_TAG);
         mask |= (1 << optionIndex);
-        tag.putInt(GATE_UNLOCKED_TAG, mask);
+        data.putInt(GATE_UNLOCKED_TAG, mask);
+        setData(stack, data);
     }
 
     public static boolean isAtGateLevel(ItemStack stack, int optionIndex) {
         int lvl = getLevel(stack, optionIndex);
         return lvl >= getGateLevel() && lvl < getMaxLevelForOption(optionIndex);
     }
-
-    // === Multi-upgrade mode (creative station) ===
 
     public static boolean hasAnyUpgrade(ItemStack stack) {
         for (String tagKey : LEVEL_TAGS) {
@@ -100,8 +124,6 @@ public class GunLevelManager {
         return max;
     }
 
-    // === Exp system (creative: shared XP) ===
-
     public static int getExp(ItemStack stack) {
         return getTagInt(stack, EXP_TAG);
     }
@@ -111,45 +133,39 @@ public class GunLevelManager {
     }
 
     public static int getExpToNext(ItemStack stack) {
-        CompoundTag tag = stack.getTag();
-        if (tag != null && tag.contains(TAG)) {
-            CompoundTag data = tag.getCompound(TAG);
-            int lowestActive = -1;
-            for (int i = 0; i < OPTION_COUNT; i++) {
-                int lvl = data.getInt(LEVEL_TAGS[i]);
-                int max = getMaxLevelByIndex(i);
-                if (lvl > 0 && lvl < max) {
-                    if (lowestActive == -1 || lvl < lowestActive) {
-                        lowestActive = lvl;
-                    }
+        CompoundTag data = getData(stack);
+        int lowestActive = -1;
+        for (int i = 0; i < OPTION_COUNT; i++) {
+            int lvl = data.getInt(LEVEL_TAGS[i]);
+            int max = getMaxLevelByIndex(i);
+            if (lvl > 0 && lvl < max) {
+                if (lowestActive == -1 || lvl < lowestActive) {
+                    lowestActive = lvl;
                 }
             }
-            if (lowestActive == -1) return 0;
-            return getExpToNextLevel(lowestActive);
         }
-        return 0;
+        if (lowestActive == -1) return 0;
+        return getExpToNextLevel(lowestActive);
     }
 
     public static int addExp(ItemStack stack, int amount) {
-        CompoundTag tag = stack.getOrCreateTagElement(TAG);
+        CompoundTag data = getData(stack);
 
-        // Gate check: if gun has an active slot and the active upgrade is at gate level
-        // with gate not unlocked, block all XP gain.
         int activeSlot = getActiveSlot(stack);
         if (activeSlot >= 0 && activeSlot < OPTION_COUNT) {
-            int activeLvl = tag.getInt(LEVEL_TAGS[activeSlot]);
+            int activeLvl = data.getInt(LEVEL_TAGS[activeSlot]);
             int activeMax = getMaxLevelByIndex(activeSlot);
             if (activeLvl > 0 && activeLvl < activeMax && activeLvl >= getGateLevel() && !isGateUnlocked(stack, activeSlot)) {
                 return 0;
             }
         }
 
-        int currentExp = tag.getInt(EXP_TAG);
+        int currentExp = data.getInt(EXP_TAG);
 
         int[] levels = new int[OPTION_COUNT];
         boolean anyActiveNotMaxed = false;
         for (int i = 0; i < OPTION_COUNT; i++) {
-            levels[i] = tag.getInt(LEVEL_TAGS[i]);
+            levels[i] = data.getInt(LEVEL_TAGS[i]);
             int max = getMaxLevelByIndex(i);
             if (levels[i] > 0 && levels[i] < max) {
                 anyActiveNotMaxed = true;
@@ -177,31 +193,30 @@ public class GunLevelManager {
                 int max = getMaxLevelByIndex(i);
                 if (levels[i] > 0 && levels[i] < max) {
                     levels[i]++;
-                    tag.putInt(LEVEL_TAGS[i], levels[i]);
+                    data.putInt(LEVEL_TAGS[i], levels[i]);
                     bitmask |= (1 << i);
                 }
             }
-            tag.putInt(EXP_TAG, currentExp);
+            data.putInt(EXP_TAG, currentExp);
+            setData(stack, data);
             return bitmask;
         } else {
-            tag.putInt(EXP_TAG, currentExp);
+            data.putInt(EXP_TAG, currentExp);
+            setData(stack, data);
             return 0;
         }
     }
-
-    // === Single-upgrade exp (regular station) ===
 
     public static int addExpToActive(ItemStack stack, int amount) {
         int slot = getActiveSlot(stack);
         if (slot < 0 || slot >= OPTION_COUNT) return 0;
 
-        CompoundTag tag = stack.getOrCreateTagElement(TAG);
-        int currentExp = tag.getInt(EXP_TAG);
-        int lvl = tag.getInt(LEVEL_TAGS[slot]);
+        CompoundTag data = getData(stack);
+        int currentExp = data.getInt(EXP_TAG);
+        int lvl = data.getInt(LEVEL_TAGS[slot]);
         int max = getMaxLevelByIndex(slot);
         if (lvl <= 0 || lvl >= max) return 0;
 
-        // Gate: at level >= half max, need gate unlocked
         if (lvl >= getGateLevel() && !isGateUnlocked(stack, slot)) return 0;
 
         currentExp += amount;
@@ -210,16 +225,17 @@ public class GunLevelManager {
         if (currentExp >= needed) {
             currentExp -= needed;
             lvl++;
-            tag.putInt(LEVEL_TAGS[slot], lvl);
-            tag.putInt(EXP_TAG, currentExp);
+            data.putInt(LEVEL_TAGS[slot], lvl);
+            data.putInt(EXP_TAG, currentExp);
+            setData(stack, data);
 
-            // If reached max, clear active slot
             if (lvl >= max) {
                 clearActiveSlot(stack);
             }
             return (1 << slot);
         } else {
-            tag.putInt(EXP_TAG, currentExp);
+            data.putInt(EXP_TAG, currentExp);
+            setData(stack, data);
             return 0;
         }
     }
@@ -228,21 +244,15 @@ public class GunLevelManager {
         int slot = getActiveSlot(stack);
         if (slot < 0 || slot >= OPTION_COUNT) return 0;
 
-        CompoundTag tag = stack.getTag();
-        if (tag == null || !tag.contains(TAG)) return 0;
-
-        CompoundTag data = tag.getCompound(TAG);
+        CompoundTag data = getData(stack);
         int lvl = data.getInt(LEVEL_TAGS[slot]);
         int max = getMaxLevelByIndex(slot);
         if (lvl <= 0 || lvl >= max) return 0;
 
-        // Gate check
         if (lvl >= getGateLevel() && !isGateUnlocked(stack, slot)) return 0;
 
         return getExpToNextLevel(lvl);
     }
-
-    // === Reload level ===
 
     public static int getReloadLevel(ItemStack stack) {
         return getTagInt(stack, RELOAD_LEVEL_TAG);
@@ -260,8 +270,6 @@ public class GunLevelManager {
         return Math.min(getReloadLevel(stack) * (ModConfig.STATS.reloadPerLevel.get() / 100.0), ModConfig.STATS.reloadMaxBonus.get());
     }
 
-    // === Recoil reduction ===
-
     public static int getRecoilLevel(ItemStack stack) {
         return getTagInt(stack, RECOIL_LEVEL_TAG);
     }
@@ -277,8 +285,6 @@ public class GunLevelManager {
     public static double getRecoilReduction(ItemStack stack) {
         return Math.min(getRecoilLevel(stack) * (ModConfig.STATS.recoilPerLevel.get() / 100.0), ModConfig.STATS.recoilMaxBonus.get());
     }
-
-    // === Armor penetration ===
 
     public static int getPenLevel(ItemStack stack) {
         return getTagInt(stack, PEN_LEVEL_TAG);
@@ -296,8 +302,6 @@ public class GunLevelManager {
         return Math.min(getPenLevel(stack) * (ModConfig.STATS.penPerLevel.get() / 100.0), ModConfig.STATS.penMaxBonus.get());
     }
 
-    // === Fire rate ===
-
     public static int getFireRateLevel(ItemStack stack) {
         return getTagInt(stack, FIRE_RATE_LEVEL_TAG);
     }
@@ -313,8 +317,6 @@ public class GunLevelManager {
     public static double getFireRateBonus(ItemStack stack) {
         return Math.min(getFireRateLevel(stack) * (ModConfig.STATS.fireRatePerLevel.get() / 100.0), ModConfig.STATS.fireRateMaxBonus.get());
     }
-
-    // === Virtual ammo ===
 
     public static int getDummyAmmoLevel(ItemStack stack) {
         return getTagInt(stack, DUMMY_AMMO_LEVEL_TAG);
@@ -334,6 +336,22 @@ public class GunLevelManager {
         return ModConfig.DUMMY_AMMO.getMaxPool(level);
     }
 
+    public static int getWeightLevel(ItemStack stack) {
+        return getTagInt(stack, WEIGHT_LEVEL_TAG);
+    }
+
+    public static boolean upgradeWeight(ItemStack stack) {
+        return incrementTag(stack, WEIGHT_LEVEL_TAG, ModConfig.WEIGHT.maxLevel.get());
+    }
+
+    public static void setWeightLevel(ItemStack stack, int level) {
+        setTagInt(stack, WEIGHT_LEVEL_TAG, Math.min(level, ModConfig.WEIGHT.maxLevel.get()));
+    }
+
+    public static double getWeightReduction(ItemStack stack) {
+        return Math.min(getWeightLevel(stack) * (ModConfig.WEIGHT.weightPerLevel.get() / 100.0), ModConfig.WEIGHT.weightMaxReduction.get());
+    }
+
     public static void initDefaultUpgrades(ItemStack stack) {
         if (hasAnyUpgrade(stack)) return;
         setTagInt(stack, RELOAD_LEVEL_TAG, 1);
@@ -343,8 +361,6 @@ public class GunLevelManager {
         clearActiveSlot(stack);
     }
 
-    // === Activation checks ===
-
     public static boolean isActivated(ItemStack stack, int optionIndex) {
         return switch (optionIndex) {
             case 0 -> getReloadLevel(stack) > 0;
@@ -352,6 +368,7 @@ public class GunLevelManager {
             case 2 -> getPenLevel(stack) > 0;
             case 3 -> getFireRateLevel(stack) > 0;
             case 4 -> getDummyAmmoLevel(stack) > 0;
+            case 5 -> getWeightLevel(stack) > 0;
             default -> false;
         };
     }
@@ -363,6 +380,7 @@ public class GunLevelManager {
             case 2 -> getPenLevel(stack);
             case 3 -> getFireRateLevel(stack);
             case 4 -> getDummyAmmoLevel(stack);
+            case 5 -> getWeightLevel(stack);
             default -> 0;
         };
     }
@@ -372,6 +390,7 @@ public class GunLevelManager {
             case 0, 1, 2 -> getMaxLevel();
             case 3 -> getMaxFireRateLevel();
             case 4 -> ModConfig.DUMMY_AMMO.maxLevel.get();
+            case 5 -> ModConfig.WEIGHT.maxLevel.get();
             default -> 0;
         };
     }
@@ -383,6 +402,7 @@ public class GunLevelManager {
             case 2 -> "gui.taczlevel.armor_pen";
             case 3 -> "gui.taczlevel.fire_rate";
             case 4 -> "gui.taczlevel.dummy_ammo";
+            case 5 -> "gui.taczlevel.weight";
             default -> "";
         };
     }
@@ -394,6 +414,7 @@ public class GunLevelManager {
             case 2 -> "gui.taczlevel.option_name_pen";
             case 3 -> "gui.taczlevel.option_name_fire_rate";
             case 4 -> "gui.taczlevel.option_name_dummy_ammo";
+            case 5 -> "gui.taczlevel.option_name_weight";
             default -> "";
         };
     }
@@ -405,30 +426,8 @@ public class GunLevelManager {
             case 2 -> level * ModConfig.STATS.penPerLevel.get();
             case 3 -> level * ModConfig.STATS.fireRatePerLevel.get();
             case 4 -> ModConfig.DUMMY_AMMO.getMaxPool(level);
+            case 5 -> level * ModConfig.WEIGHT.weightPerLevel.get();
             default -> 0.0;
         };
-    }
-
-    // === Internal helpers ===
-
-    private static int getTagInt(ItemStack stack, String key) {
-        CompoundTag tag = stack.getTag();
-        if (tag != null && tag.contains(TAG)) {
-            return tag.getCompound(TAG).getInt(key);
-        }
-        return 0;
-    }
-
-    private static void setTagInt(ItemStack stack, String key, int value) {
-        CompoundTag tag = stack.getOrCreateTagElement(TAG);
-        tag.putInt(key, value);
-    }
-
-    private static boolean incrementTag(ItemStack stack, String key, int max) {
-        CompoundTag tag = stack.getOrCreateTagElement(TAG);
-        int level = tag.getInt(key);
-        if (level >= max) return false;
-        tag.putInt(key, level + 1);
-        return true;
     }
 }
