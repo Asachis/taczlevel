@@ -1,10 +1,8 @@
 package com.taczlevel.data;
 
 import com.taczlevel.config.ModConfig;
-import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.component.CustomData;
 
 public class GunLevelManager {
     private static final String TAG = "taczlevel";
@@ -25,13 +23,15 @@ public class GunLevelManager {
     private static final int OPTION_COUNT = 6;
 
     private static CompoundTag getData(ItemStack stack) {
-        return stack.getOrDefault(DataComponents.CUSTOM_DATA, CustomData.EMPTY).copyTag().getCompound(TAG);
+        CompoundTag tag = stack.getTag();
+        if (tag == null) return new CompoundTag();
+        return tag.getCompound(TAG);
     }
 
     private static void setData(ItemStack stack, CompoundTag data) {
-        CompoundTag root = stack.getOrDefault(DataComponents.CUSTOM_DATA, CustomData.EMPTY).copyTag();
+        CompoundTag root = stack.getOrCreateTag();
         root.put(TAG, data);
-        stack.set(DataComponents.CUSTOM_DATA, CustomData.of(root));
+        stack.setTag(root);
     }
 
     private static int getTagInt(ItemStack stack, String key) {

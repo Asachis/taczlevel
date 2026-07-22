@@ -3,11 +3,10 @@ package com.taczlevel.config;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.Item;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.neoforged.fml.ModList;
-import net.neoforged.neoforge.common.ModConfigSpec;
+import net.minecraftforge.common.ForgeConfigSpec;
 
 public class ModConfig {
-    public static final ModConfigSpec.Builder BUILDER = new ModConfigSpec.Builder();
+    public static final ForgeConfigSpec.Builder BUILDER = new ForgeConfigSpec.Builder();
 
     public static final StatsCategory STATS = new StatsCategory();
     public static final XpCategory XP = new XpCategory();
@@ -19,19 +18,19 @@ public class ModConfig {
     public static final GameRulesCategory GAME_RULES = new GameRulesCategory();
     public static final AutoRulesCategory AUTO_RULES = new AutoRulesCategory();
 
-    public static final ModConfigSpec SPEC = BUILDER.build();
+    public static final ForgeConfigSpec SPEC = BUILDER.build();
 
     public static class StatsCategory {
-        public final ModConfigSpec.IntValue maxLevel;
-        public final ModConfigSpec.IntValue maxFireRateLevel;
-        public final ModConfigSpec.DoubleValue reloadPerLevel;
-        public final ModConfigSpec.DoubleValue recoilPerLevel;
-        public final ModConfigSpec.DoubleValue penPerLevel;
-        public final ModConfigSpec.DoubleValue fireRatePerLevel;
-        public final ModConfigSpec.DoubleValue reloadMaxBonus;
-        public final ModConfigSpec.DoubleValue recoilMaxBonus;
-        public final ModConfigSpec.DoubleValue penMaxBonus;
-        public final ModConfigSpec.DoubleValue fireRateMaxBonus;
+        public final ForgeConfigSpec.IntValue maxLevel;
+        public final ForgeConfigSpec.IntValue maxFireRateLevel;
+        public final ForgeConfigSpec.DoubleValue reloadPerLevel;
+        public final ForgeConfigSpec.DoubleValue recoilPerLevel;
+        public final ForgeConfigSpec.DoubleValue penPerLevel;
+        public final ForgeConfigSpec.DoubleValue fireRatePerLevel;
+        public final ForgeConfigSpec.DoubleValue reloadMaxBonus;
+        public final ForgeConfigSpec.DoubleValue recoilMaxBonus;
+        public final ForgeConfigSpec.DoubleValue penMaxBonus;
+        public final ForgeConfigSpec.DoubleValue fireRateMaxBonus;
 
         StatsCategory() {
             BUILDER.push("stats");
@@ -70,17 +69,17 @@ public class ModConfig {
     }
 
     public static class XpCategory {
-        public final ModConfigSpec.IntValue baseExp;
-        public final ModConfigSpec.IntValue expPerLevel;
-        public final ModConfigSpec.DoubleValue damageExpMultiplier;
-        public final ModConfigSpec.IntValue dragonExp;
-        public final ModConfigSpec.IntValue witherExp;
-        public final ModConfigSpec.IntValue bossExp;
-        public final ModConfigSpec.IntValue eliteExp;
-        public final ModConfigSpec.IntValue normalExp;
-        public final ModConfigSpec.IntValue neutralExp;
-        public final ModConfigSpec.IntValue animalExp;
-        public final ModConfigSpec.IntValue otherExp;
+        public final ForgeConfigSpec.IntValue baseExp;
+        public final ForgeConfigSpec.IntValue expPerLevel;
+        public final ForgeConfigSpec.DoubleValue damageExpMultiplier;
+        public final ForgeConfigSpec.IntValue dragonExp;
+        public final ForgeConfigSpec.IntValue witherExp;
+        public final ForgeConfigSpec.IntValue bossExp;
+        public final ForgeConfigSpec.IntValue eliteExp;
+        public final ForgeConfigSpec.IntValue normalExp;
+        public final ForgeConfigSpec.IntValue neutralExp;
+        public final ForgeConfigSpec.IntValue animalExp;
+        public final ForgeConfigSpec.IntValue otherExp;
 
         XpCategory() {
             BUILDER.push("xp");
@@ -122,8 +121,8 @@ public class ModConfig {
     }
 
     public static class StationCategory {
-        public final ModConfigSpec.ConfigValue<String> activationItem;
-        public final ModConfigSpec.IntValue activationCount;
+        public final ForgeConfigSpec.ConfigValue<String> activationItem;
+        public final ForgeConfigSpec.IntValue activationCount;
 
         StationCategory() {
             BUILDER.push("station");
@@ -148,9 +147,9 @@ public class ModConfig {
     }
 
     public static class SoundCategory {
-        public final ModConfigSpec.BooleanValue enabled;
-        public final ModConfigSpec.DoubleValue volume;
-        public final ModConfigSpec.DoubleValue pitch;
+        public final ForgeConfigSpec.BooleanValue enabled;
+        public final ForgeConfigSpec.DoubleValue volume;
+        public final ForgeConfigSpec.DoubleValue pitch;
 
         SoundCategory() {
             BUILDER.push("sound");
@@ -169,16 +168,16 @@ public class ModConfig {
 
     @SuppressWarnings("unchecked")
     public static class OptionNotificationCategory {
-        public final ModConfigSpec.ConfigValue<String>[] positions;
-        public final ModConfigSpec.DoubleValue[] sizes;
+        public final ForgeConfigSpec.ConfigValue<String>[] positions;
+        public final ForgeConfigSpec.DoubleValue[] sizes;
 
         private static final String[] NAMES = {"reload", "recoil", "penetration", "fire_rate", "dummy_ammo", "weight"};
         private static final String[] LABELS = {"Reload Speed", "Recoil", "Armor Penetration", "Fire Rate", "Virtual Ammo", "Weight Reduction"};
 
         OptionNotificationCategory() {
             BUILDER.push("notification_options");
-            positions = new ModConfigSpec.ConfigValue[6];
-            sizes = new ModConfigSpec.DoubleValue[6];
+            positions = new ForgeConfigSpec.ConfigValue[6];
+            sizes = new ForgeConfigSpec.DoubleValue[6];
             for (int i = 0; i < 6; i++) {
                 BUILDER.push(NAMES[i]);
                 positions[i] = BUILDER
@@ -204,12 +203,12 @@ public class ModConfig {
     }
 
     public static class DummyAmmoCategory {
-        public final ModConfigSpec.IntValue maxLevel;
-        public final ModConfigSpec.IntValue basePool;
-        public final ModConfigSpec.IntValue poolPerLevel;
-        public final ModConfigSpec.DoubleValue regenPerSecond;
-        public final ModConfigSpec.DoubleValue regenPerSecondPerLevel;
-        public final ModConfigSpec.IntValue regenDelayTicks;
+        public final ForgeConfigSpec.IntValue maxLevel;
+        public final ForgeConfigSpec.IntValue basePool;
+        public final ForgeConfigSpec.IntValue poolPerLevel;
+        public final ForgeConfigSpec.DoubleValue regenPerSecond;
+        public final ForgeConfigSpec.DoubleValue regenPerSecondPerLevel;
+        public final ForgeConfigSpec.IntValue regenDelayTicks;
 
         DummyAmmoCategory() {
             BUILDER.push("dummy_ammo");
@@ -244,9 +243,9 @@ public class ModConfig {
     }
 
     public static class WeightCategory {
-        public final ModConfigSpec.IntValue maxLevel;
-        public final ModConfigSpec.DoubleValue weightPerLevel;
-        public final ModConfigSpec.DoubleValue weightMaxReduction;
+        public final ForgeConfigSpec.IntValue maxLevel;
+        public final ForgeConfigSpec.DoubleValue weightPerLevel;
+        public final ForgeConfigSpec.DoubleValue weightMaxReduction;
 
         WeightCategory() {
             BUILDER.push("weight");
@@ -264,33 +263,27 @@ public class ModConfig {
     }
 
     public static class GameRulesCategory {
-        public final ModConfigSpec.BooleanValue startWithUpgrades;
-        public final ModConfigSpec.ConfigValue<String> attributeMode;
-
-        private static final String[] VALID_MODES = {"auto", "taa", "taczlevel"};
+        public final ForgeConfigSpec.BooleanValue startWithUpgrades;
+        public final ForgeConfigSpec.BooleanValue useTaaAttributes;
+        public final ForgeConfigSpec.BooleanValue useTaczLevelAttributes;
 
         GameRulesCategory() {
             BUILDER.push("game_rules");
             startWithUpgrades = BUILDER
                     .comment("When enabled, players receive tacz guns with all upgrades at level 1 by default")
                     .define("start_with_upgrades", false);
-            attributeMode = BUILDER
-                    .comment("Attribute application mode: \"auto\" (use TAA entity attributes if loaded, fallback to cache), \"taa\" (force TAA entity attribute mode), \"taczlevel\" (force built-in cache property mode)")
-                    .define("attribute_mode", "auto");
+            useTaaAttributes = BUILDER
+                    .comment("Use TAA entity attributes to apply upgrade bonuses (reload, recoil, armor pen, fire rate, weight). Requires TAA mod to be installed.")
+                    .define("use_taa_attributes", false);
+            useTaczLevelAttributes = BUILDER
+                    .comment("Use built-in cache property system to apply upgrade bonuses (armor pen, fire rate). Works without TAA mod.")
+                    .define("use_taczlevel_attributes", true);
             BUILDER.pop();
-        }
-
-        public String getAttributeMode() {
-            String mode = attributeMode.get();
-            for (String valid : VALID_MODES) {
-                if (valid.equals(mode)) return mode;
-            }
-            return "auto";
         }
     }
 
     public static class AutoRulesCategory {
-        public final ModConfigSpec.BooleanValue autoDummyAmmo;
+        public final ForgeConfigSpec.BooleanValue autoDummyAmmo;
 
         AutoRulesCategory() {
             BUILDER.push("auto_rules");
@@ -302,10 +295,10 @@ public class ModConfig {
     }
 
     public static boolean useEntityAttributes() {
-        return switch (GAME_RULES.getAttributeMode()) {
-            case "taa" -> true;
-            case "taczlevel" -> false;
-            default -> ModList.get().isLoaded("taa");
-        };
+        return GAME_RULES.useTaaAttributes.get();
+    }
+
+    public static boolean useBuiltinAttributes() {
+        return GAME_RULES.useTaczLevelAttributes.get();
     }
 }

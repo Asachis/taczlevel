@@ -201,14 +201,20 @@ public class ClothConfigScreen {
                 .setSaveConsumer(v -> ModConfig.GAME_RULES.startWithUpgrades.set(v))
                 .build());
 
-        cat.addEntry(eb.startSelector(
-                        Component.translatable("config.taczlevel.game_rules.attribute_mode"),
-                        new String[]{"auto", "taa", "taczlevel"},
-                        ModConfig.GAME_RULES.getAttributeMode())
-                .setDefaultValue("auto")
-                .setTooltip(Component.translatable("config.taczlevel.game_rules.attribute_mode.tooltip"))
-                .setSaveConsumer(v -> ModConfig.GAME_RULES.attributeMode.set(v))
-                .setNameProvider(value -> Component.translatable("config.taczlevel.game_rules.attribute_mode." + value))
+        cat.addEntry(eb.startBooleanToggle(
+                        Component.translatable("config.taczlevel.game_rules.use_taa_attributes"),
+                        ModConfig.GAME_RULES.useTaaAttributes.get())
+                .setDefaultValue(false)
+                .setTooltip(Component.translatable("config.taczlevel.game_rules.use_taa_attributes.tooltip"))
+                .setSaveConsumer(v -> ModConfig.GAME_RULES.useTaaAttributes.set(v))
+                .build());
+
+        cat.addEntry(eb.startBooleanToggle(
+                        Component.translatable("config.taczlevel.game_rules.use_taczlevel_attributes"),
+                        ModConfig.GAME_RULES.useTaczLevelAttributes.get())
+                .setDefaultValue(true)
+                .setTooltip(Component.translatable("config.taczlevel.game_rules.use_taczlevel_attributes.tooltip"))
+                .setSaveConsumer(v -> ModConfig.GAME_RULES.useTaczLevelAttributes.set(v))
                 .build());
     }
 

@@ -5,9 +5,7 @@ import com.taczlevel.config.ModConfig;
 import com.taczlevel.data.GunLevelManager;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.world.item.component.CustomData;
 import net.minecraft.network.chat.Component;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
@@ -18,13 +16,13 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.projectile.Projectile;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.entity.item.ItemEntity;
-import net.neoforged.neoforge.event.entity.EntityJoinLevelEvent;
-import net.neoforged.neoforge.event.entity.living.LivingDamageEvent;
-import net.neoforged.neoforge.event.entity.living.LivingDeathEvent;
-import net.neoforged.neoforge.event.entity.player.ItemTooltipEvent;
-import net.neoforged.neoforge.event.entity.player.PlayerEvent;
-import net.neoforged.neoforge.event.tick.EntityTickEvent;
-import net.neoforged.bus.api.SubscribeEvent;
+import net.minecraftforge.event.entity.EntityJoinLevelEvent;
+import net.minecraftforge.event.entity.living.LivingDamageEvent;
+import net.minecraftforge.event.entity.living.LivingDeathEvent;
+import net.minecraftforge.event.entity.player.ItemTooltipEvent;
+import net.minecraftforge.event.entity.player.PlayerEvent;
+import net.minecraftforge.event.entity.living.LivingEvent;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
 
 import java.util.List;
 
@@ -113,14 +111,14 @@ public class GunEvents {
     }
 
     @SubscribeEvent
-    public void onLivingDamagePost(LivingDamageEvent.Post event) {
+    public void onLivingDamagePost(LivingDamageEvent event) {
         LivingEntity source = getLivingSource(event.getSource());
         if (source == null) return;
         ItemStack gun = source.getMainHandItem();
         if (!isTaczGun(gun)) return;
 
         if (GunLevelManager.hasAnyUpgrade(gun)) {
-            float dmg = event.getNewDamage();
+            float dmg = event.getAmount();
             if (dmg > 0.0f) {
                 int dmgExp = Math.max(1, (int) (dmg * ModConfig.XP.damageExpMultiplier.get().floatValue()));
                 int result;
@@ -187,6 +185,13 @@ public class GunEvents {
             }
         }
 
+        double weightReduction = GunLevelManager.getWeightReduction(stack);
+        if (weightReduction > 1.0) {
+            double speedBonus = (weightReduction - 1.0) * 0.2;
+            tooltip.add(Component.translatable("gui.taczlevel.tooltip_move_speed",
+                    String.format("%.0f", speedBonus * 100)).withStyle(ChatFormatting.AQUA));
+        }
+
         if (overallLvl > 0) {
             int exp = GunLevelManager.getExp(stack);
             int needed = GunLevelManager.getExpToNext(stack);
@@ -224,8 +229,8 @@ public class GunEvents {
     }
 
     @SubscribeEvent
-    public void onPlayerTick(EntityTickEvent.Post event) {
-        if (!(event.getEntity() instanceof LivingEntity entity)) return;
+    public void onPlayerTick(LivingEvent.LivingTickEvent event) {
+        LivingEntity entity = event.getEntity();
         if (entity.level().isClientSide) return;
         if (entity.tickCount % 5 != 0) return;
 
@@ -284,11 +289,11 @@ public class GunEvents {
     }
 
     private static CompoundTag getOrCreateDummyAmmoTag(ItemStack stack) {
-        return stack.getOrDefault(DataComponents.CUSTOM_DATA, CustomData.EMPTY).copyTag();
+        return stack.getOrCreateTag();
     }
 
     private static void saveDummyAmmoTag(ItemStack stack, CompoundTag tag) {
-        stack.set(DataComponents.CUSTOM_DATA, CustomData.of(tag));
+        stack.setTag(tag);
     }
 
     private static void setDummyAmmoTag(ItemStack stack, String key, int value) {

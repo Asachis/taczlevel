@@ -160,6 +160,7 @@
   "config.taczlevel.notification_options.dummy_ammo.size": "Virtual Ammo Notification Size",
   "config.taczlevel.notification_options.dummy_ammo.size.tooltip": "Virtual ammo upgrade text scale (0.5=small, 1.0=normal, 2.0=large)",
   "gui.taczlevel.tooltip_weight": "Weight: -%s%% [Lv.%s/%s]",
+  "gui.taczlevel.tooltip_move_speed": "Move Speed: +%s%% (excess weight reduction)",
   "gui.taczlevel.weight": "Weight: -%s%%",
   "gui.taczlevel.option_name_weight": "Weight Reduction",
   "gui.taczlevel.upgrade_weight": "Weight",
@@ -187,9 +188,8 @@
   "config.taczlevel.section.game_rules": "Game Rules",
   "config.taczlevel.game_rules.start_with_upgrades": "Start With Upgrades",
   "config.taczlevel.game_rules.start_with_upgrades.tooltip": "When enabled, players receive tacz guns with all upgrades at level 1 by default",
-  "config.taczlevel.game_rules.attribute_mode": "Attribute Mode",
-  "config.taczlevel.game_rules.attribute_mode.tooltip": "How upgrade bonuses are applied: \"auto\" (TAA entity attrs if loaded, else cache), \"taa\" (force TAA entity attrs), \"taczlevel\" (force built-in cache property)",
-  "config.taczlevel.game_rules.attribute_mode.auto": "Auto",
-  "config.taczlevel.game_rules.attribute_mode.taa": "TAA Entity Attributes",
-  "config.taczlevel.game_rules.attribute_mode.taczlevel": "Built-in Cache Property"
+  "config.taczlevel.game_rules.use_taa_attributes": "Use TAA Entity Attributes",
+  "config.taczlevel.game_rules.use_taa_attributes.tooltip": "Apply upgrade bonuses via entity attributes (reload, recoil, armor pen, fire rate, weight). Requires TAA mod to be installed.",
+  "config.taczlevel.game_rules.use_taczlevel_attributes": "Use Built-in Cache Properties",
+  "config.taczlevel.game_rules.use_taczlevel_attributes.tooltip": "Apply upgrade bonuses via TACZ built-in cache property system (armor pen, fire rate). Works without TAA mod."
 }

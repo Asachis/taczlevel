@@ -6,14 +6,14 @@ import com.taczlevel.block.entity.CreativeGunUpgradeBlockEntity;
 import com.taczlevel.config.ModConfig;
 import com.taczlevel.data.GunLevelManager;
 import com.taczlevel.event.GunEvents;
-import net.minecraft.network.RegistryFriendlyByteBuf;
+import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.ContainerLevelAccess;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
-import net.neoforged.neoforge.items.SlotItemHandler;
+import net.minecraftforge.items.SlotItemHandler;
 
 public class CreativeGunUpgradeMenu extends AbstractContainerMenu {
     private final CreativeGunUpgradeBlockEntity blockEntity;
@@ -29,15 +29,15 @@ public class CreativeGunUpgradeMenu extends AbstractContainerMenu {
 
         for (int i = 0; i < 3; i++) {
             for (int j = 0; j < 9; j++) {
-                addSlot(new Slot(inv, j + i * 9 + 9, 10 + j * 18, 144 + i * 18));
+                addSlot(new Slot(inv, j + i * 9 + 9, 10 + j * 18, 166 + i * 18));
             }
         }
         for (int j = 0; j < 9; j++) {
-            addSlot(new Slot(inv, j, 10 + j * 18, 202));
+            addSlot(new Slot(inv, j, 10 + j * 18, 222));
         }
     }
 
-    public CreativeGunUpgradeMenu(int id, Inventory inv, RegistryFriendlyByteBuf buf) {
+    public CreativeGunUpgradeMenu(int id, Inventory inv, FriendlyByteBuf buf) {
         this(id, inv, (CreativeGunUpgradeBlockEntity) inv.player.level().getBlockEntity(buf.readBlockPos()));
     }
 

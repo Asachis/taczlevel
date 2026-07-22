@@ -6,7 +6,6 @@ import com.taczlevel.data.GunLevelManager;
 import com.taczlevel.event.GunEvents;
 import com.taczlevel.gui.CreativeGunUpgradeMenu;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.sounds.SoundEvents;
@@ -19,7 +18,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
-import net.neoforged.neoforge.items.ItemStackHandler;
+import net.minecraftforge.items.ItemStackHandler;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -114,28 +113,22 @@ public class CreativeGunUpgradeBlockEntity extends BlockEntity implements MenuPr
     @Override
     public void onLoad() {
         super.onLoad();
-        if (level != null) {
-            level.invalidateCapabilities(worldPosition);
-        }
     }
 
     @Override
     public void setRemoved() {
         super.setRemoved();
-        if (level != null) {
-            level.invalidateCapabilities(worldPosition);
-        }
     }
 
     @Override
-    protected void saveAdditional(CompoundTag tag, HolderLookup.Provider registries) {
-        tag.put("inventory", itemHandler.serializeNBT(registries));
-        super.saveAdditional(tag, registries);
+    protected void saveAdditional(CompoundTag tag) {
+        tag.put("inventory", itemHandler.serializeNBT());
+        super.saveAdditional(tag);
     }
 
     @Override
-    protected void loadAdditional(CompoundTag tag, HolderLookup.Provider registries) {
-        super.loadAdditional(tag, registries);
-        itemHandler.deserializeNBT(registries, tag.getCompound("inventory"));
+    public void load(CompoundTag tag) {
+        super.load(tag);
+        itemHandler.deserializeNBT(tag.getCompound("inventory"));
     }
 }

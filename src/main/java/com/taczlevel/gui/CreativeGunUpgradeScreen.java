@@ -1,7 +1,8 @@
 package com.taczlevel.gui;
 
 import com.taczlevel.data.GunLevelManager;
-import com.taczlevel.network.GunUpgradePayload;
+import com.taczlevel.network.GunUpgradePacket;
+import com.taczlevel.network.NetworkHandler;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
@@ -10,7 +11,6 @@ import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.item.ItemStack;
-import net.neoforged.neoforge.network.PacketDistributor;
 
 public class CreativeGunUpgradeScreen extends AbstractContainerScreen<CreativeGunUpgradeMenu> {
     private static final int BG_MAIN       = 0xFF0a0a1a;
@@ -34,26 +34,34 @@ public class CreativeGunUpgradeScreen extends AbstractContainerScreen<CreativeGu
         0xFF004d3f, 0xFF4d2a00, 0xFF3a1a55, 0xFF4d1515, 0xFF004d7f, 0xFF225522,
     };
 
-    private static final int CARDS_X   = 74;
-    private static final int CARDS_Y   = 16;
-    private static final int CARD_W    = 120;
-    private static final int CARD_H    = 22;
-    private static final int CARD_GAP  = 2;
-    private static final int BTN_W     = 42;
-    private static final int BTN_H     = 12;
-    private static final int OPTIONS   = 6;
+    private static final int CARDS_X    = 74;
+    private static final int CARDS_Y    = 16;
+    private static final int CARD_W     = 120;
+    private static final int CARD_H     = 18;
+    private static final int CARD_GAP   = 1;
+    private static final int PANEL_L    = 68;
+    private static final int PANEL_R    = 4;
+    private static final int PANEL_TOP  = 12;
+    private static final int PANEL_BOT  = 148;
+    private static final int VIEWPORT_H = PANEL_BOT - CARDS_Y;
+    private static final int BTN_W      = 50;
+    private static final int BTN_H      = 12;
+    private static final int OPTIONS    = 6;
 
-    private static final int EXP_TEXT_Y = 128;
-    private static final int EXP_BAR_Y  = 134;
+    private static final int EXP_TEXT_Y = 135;
+    private static final int EXP_BAR_Y  = 141;
     private static final int EXP_BAR_H  = 4;
 
+    private static final int SCROLLBAR_W = 3;
+
     private final Button[] actionButtons = new Button[OPTIONS];
+    private int scrollOffset;
 
     public CreativeGunUpgradeScreen(CreativeGunUpgradeMenu menu, Inventory inv, Component title) {
         super(menu, inv, title);
         this.imageWidth = 196;
-        this.imageHeight = 220;
-        this.inventoryLabelY = 140;
+        this.imageHeight = 244;
+        this.inventoryLabelY = 156;
         this.titleLabelX = 8;
     }
 
@@ -70,15 +78,42 @@ public class CreativeGunUpgradeScreen extends AbstractContainerScreen<CreativeGu
     }
 
     @Override
+    public boolean mouseScrolled(double mx, double my, double delta) {
+        if (isMouseInPanel(mx, my)) {
+            int contentH = OPTIONS * (CARD_H + CARD_GAP);
+            int maxScroll = Math.max(0, contentH - VIEWPORT_H);
+            scrollOffset = (int) Math.round(Math.max(0, Math.min(scrollOffset - delta * 8, maxScroll)));
+            return true;
+        }
+        return super.mouseScrolled(mx, my, delta);
+    }
+
+    private boolean isMouseInPanel(double mx, double my) {
+        int x = leftPos + PANEL_L;
+        int y = topPos + PANEL_TOP;
+        return mx >= x && mx < x + (imageWidth - PANEL_L - PANEL_R) && my >= y && my < y + (PANEL_BOT - PANEL_TOP);
+    }
+
+    @Override
     public void containerTick() {
         super.containerTick();
         boolean hasGun = menu.hasGun();
+
+        int contentH = OPTIONS * (CARD_H + CARD_GAP);
+        int maxScroll = Math.max(0, contentH - VIEWPORT_H);
+        if (scrollOffset > maxScroll) scrollOffset = maxScroll;
+
         for (int i = 0; i < OPTIONS; i++) {
             ItemStack gun = menu.getBlockEntity().getItemHandler().getStackInSlot(0);
             boolean activated = hasGun && GunLevelManager.isActivated(gun, i);
             int lvl = hasGun ? GunLevelManager.getLevel(gun, i) : 0;
             int maxLvl = GunLevelManager.getMaxLevelForOption(i);
             boolean maxed = activated && lvl >= maxLvl;
+
+            int by = topPos + CARDS_Y + i * (CARD_H + CARD_GAP) + 2 - scrollOffset;
+            actionButtons[i].setY(by);
+            boolean inView = by + BTN_H > topPos + CARDS_Y && by < topPos + PANEL_BOT;
+            actionButtons[i].visible = inView;
 
             actionButtons[i].active = hasGun && !activated;
             actionButtons[i].setMessage(maxed
@@ -93,6 +128,7 @@ public class CreativeGunUpgradeScreen extends AbstractContainerScreen<CreativeGu
     protected void renderBg(GuiGraphics gui, float partialTick, int mx, int my) {
         drawBackground(gui);
         drawCards(gui, mx, my);
+        drawScrollbar(gui);
         drawExpBar(gui);
     }
 
@@ -105,9 +141,13 @@ public class CreativeGunUpgradeScreen extends AbstractContainerScreen<CreativeGu
         gui.fill(x, y, x + 1, y + h, BORDER_LIGHT);
         gui.fill(x + w - 1, y, x + w, y + h, BORDER_LIGHT);
 
-        gui.fill(x + 68, y + 12, x + w - 4, y + 126, BG_PANEL);
-        gui.fill(x + 68, y + 12, x + w - 4, y + 13, BORDER_DIM);
-        gui.fill(x + 68, y + 125, x + w - 4, y + 126, BORDER_DIM);
+        gui.fill(x + PANEL_L, y + PANEL_TOP, x + w - PANEL_R, y + PANEL_BOT, BG_PANEL);
+        gui.fill(x + PANEL_L, y + PANEL_TOP, x + w - PANEL_R, y + PANEL_TOP + 1, BORDER_DIM);
+        gui.fill(x + PANEL_L, y + PANEL_BOT - 1, x + w - PANEL_R, y + PANEL_BOT, BORDER_DIM);
+    }
+
+    private boolean isCardVisible(int cy) {
+        return cy + CARD_H > topPos + CARDS_Y && cy < topPos + PANEL_BOT;
     }
 
     private void drawCards(GuiGraphics gui, int mx, int my) {
@@ -119,7 +159,10 @@ public class CreativeGunUpgradeScreen extends AbstractContainerScreen<CreativeGu
 
         for (int i = 0; i < OPTIONS; i++) {
             int cx = leftPos + CARDS_X;
-            int cy = topPos + CARDS_Y + i * (CARD_H + CARD_GAP);
+            int cy = topPos + CARDS_Y + i * (CARD_H + CARD_GAP) - scrollOffset;
+
+            if (!isCardVisible(cy)) continue;
+
             boolean hovered = mx >= cx && mx < cx + CARD_W && my >= cy && my < cy + CARD_H;
             boolean activated = GunLevelManager.isActivated(gun, i);
 
@@ -138,12 +181,12 @@ public class CreativeGunUpgradeScreen extends AbstractContainerScreen<CreativeGu
             double pct = GunLevelManager.getStatPercentage(i, lvl);
             boolean maxed = lvl >= maxLvl;
 
-            gui.fill(cx + 7, cy + 4, cx + 11, cy + 8, accent);
+            gui.fill(cx + 7, cy + 3, cx + 11, cy + 7, accent);
 
             if (showDetails) {
                 String statKey = GunLevelManager.getStatNameKey(i);
                 Component statLine = Component.translatable(statKey, String.format("%.0f", pct));
-                gui.drawString(font, statLine, cx + 16, cy + 2,
+                gui.drawString(font, statLine, cx + 16, cy + 1,
                         activated ? TEXT_MUTED : TEXT_MAIN, false);
 
                 Component lvlText = Component.translatable("gui.taczlevel.level_short",
@@ -151,12 +194,12 @@ public class CreativeGunUpgradeScreen extends AbstractContainerScreen<CreativeGu
                 int lvlW = font.width(lvlText);
 
                 int barX = cx + 7 + lvlW + 6;
-                int barY = cy + 15;
+                int barY = cy + 13;
                 int barW = CARD_W - 14 - lvlW - 6;
                 if (barW < 10) barW = 10;
 
                 int lvlColor = activated ? TEXT_MUTED : (maxed ? TEXT_GOLD : TEXT_SUB);
-                gui.drawString(font, lvlText, cx + 7, cy + 13, lvlColor, false);
+                gui.drawString(font, lvlText, cx + 7, cy + 11, lvlColor, false);
 
                 gui.fill(barX, barY, barX + barW, barY + 3, BAR_TRACK);
                 if (maxLvl > 0) {
@@ -168,16 +211,16 @@ public class CreativeGunUpgradeScreen extends AbstractContainerScreen<CreativeGu
             } else {
                 String nameKey = GunLevelManager.getOptionNameKey(i);
                 Component nameLine = Component.translatable(nameKey);
-                gui.drawString(font, nameLine, cx + 16, cy + 3,
+                gui.drawString(font, nameLine, cx + 16, cy + 2,
                         activated ? TEXT_MUTED : TEXT_MAIN, false);
 
                 Component lvlText = Component.translatable("gui.taczlevel.level_short",
                         String.valueOf(lvl), String.valueOf(maxLvl));
                 int lvlColor = activated ? TEXT_MUTED : (maxed ? TEXT_GOLD : TEXT_SUB);
-                gui.drawString(font, lvlText, cx + 16 + font.width(nameLine) + 6, cy + 3, lvlColor, false);
+                gui.drawString(font, lvlText, cx + 16 + font.width(nameLine) + 6, cy + 2, lvlColor, false);
 
                 int barX = cx + 7;
-                int barY = cy + 14;
+                int barY = cy + 13;
                 int barW = CARD_W - 14;
                 gui.fill(barX, barY, barX + barW, barY + 2, BAR_TRACK);
                 if (maxLvl > 0) {
@@ -191,8 +234,25 @@ public class CreativeGunUpgradeScreen extends AbstractContainerScreen<CreativeGu
 
         if (!showDetails) {
             gui.drawString(font, Component.translatable("gui.taczlevel.shift_hint"),
-                    leftPos + CARDS_X, topPos + CARDS_Y + OPTIONS * (CARD_H + CARD_GAP) + 4, TEXT_MUTED, false);
+                    leftPos + CARDS_X, topPos + EXP_TEXT_Y - 3, TEXT_MUTED, false);
         }
+    }
+
+    private void drawScrollbar(GuiGraphics gui) {
+        int contentH = OPTIONS * (CARD_H + CARD_GAP);
+        int maxScroll = Math.max(0, contentH - VIEWPORT_H);
+        if (maxScroll <= 0) return;
+
+        int sx = leftPos + imageWidth - PANEL_R - SCROLLBAR_W - 2;
+        int sy = topPos + CARDS_Y;
+        int sbH = VIEWPORT_H;
+
+        gui.fill(sx, sy, sx + SCROLLBAR_W, sy + sbH, 0xFF1a1a3a);
+
+        float thumbRatio = (float) VIEWPORT_H / contentH;
+        int thumbH = Math.max(8, (int) (sbH * thumbRatio));
+        int thumbY = sy + (int) ((float) scrollOffset / maxScroll * (sbH - thumbH));
+        gui.fill(sx, thumbY, sx + SCROLLBAR_W, thumbY + thumbH, 0xFF4444aa);
     }
 
     private void drawExpBar(GuiGraphics gui) {
@@ -267,7 +327,7 @@ public class CreativeGunUpgradeScreen extends AbstractContainerScreen<CreativeGu
     }
 
     private void sendUpgrade(int opt) {
-        PacketDistributor.sendToServer(new GunUpgradePayload(
+        NetworkHandler.CHANNEL.sendToServer(new GunUpgradePacket(
                 menu.containerId, opt, menu.getBlockEntity().getBlockPos()));
     }
 

@@ -178,7 +178,7 @@ public class TaczLevelCommand {
             }
             case 5 -> {
                 GunLevelManager.setWeightLevel(gun, level);
-                ctx.getSource().sendSuccess(() -> Component.translatable("command.taczlevel.set_dummy_ammo",
+                ctx.getSource().sendSuccess(() -> Component.translatable("command.taczlevel.set_weight",
                         player.getName(), level), true);
             }
         }
@@ -265,7 +265,7 @@ public class TaczLevelCommand {
                     return 0;
                 }
                 GunLevelManager.upgradeWeight(gun);
-                ctx.getSource().sendSuccess(() -> Component.translatable("command.taczlevel.upgraded_dummy_ammo",
+                ctx.getSource().sendSuccess(() -> Component.translatable("command.taczlevel.upgraded_weight",
                         player.getName(), GunLevelManager.getWeightLevel(gun)), true);
             }
         }
@@ -347,9 +347,15 @@ public class TaczLevelCommand {
         src.sendSuccess(() -> Component.translatable("gui.taczlevel.tooltip_dummy_ammo",
                 GunLevelManager.getDummyAmmoMaxPool(gun), d,
                 ModConfig.DUMMY_AMMO.maxLevel.get()), false);
+        double weightReduction = GunLevelManager.getWeightReduction(gun);
         src.sendSuccess(() -> Component.translatable("gui.taczlevel.tooltip_weight",
-                String.format("%.0f", GunLevelManager.getWeightReduction(gun) * 100), w,
+                String.format("%.0f", weightReduction * 100), w,
                 ModConfig.WEIGHT.maxLevel.get()), false);
+        if (weightReduction > 1.0) {
+            double speedBonus = (weightReduction - 1.0) * 0.2;
+            src.sendSuccess(() -> Component.translatable("gui.taczlevel.tooltip_move_speed",
+                    String.format("%.0f", speedBonus * 100)), false);
+        }
         if (next > 0) {
             src.sendSuccess(() -> Component.translatable("gui.taczlevel.tooltip_exp", exp, next), false);
         }

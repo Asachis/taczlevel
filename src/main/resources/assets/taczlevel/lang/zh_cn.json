@@ -187,9 +187,8 @@
   "config.taczlevel.section.game_rules": "游戏规则",
   "config.taczlevel.game_rules.start_with_upgrades": "初始自带升级",
   "config.taczlevel.game_rules.start_with_upgrades.tooltip": "启用后，玩家获得TACZ枪械时自带1级所有升级",
-  "config.taczlevel.game_rules.attribute_mode": "属性模式",
-  "config.taczlevel.game_rules.attribute_mode.tooltip": "升级加成的应用方式：\"auto\"（自动选择），\"taa\"（使用TAA实体属性），\"taczlevel\"（使用内置缓存属性）",
-  "config.taczlevel.game_rules.attribute_mode.auto": "自动",
-  "config.taczlevel.game_rules.attribute_mode.taa": "TAA实体属性",
-  "config.taczlevel.game_rules.attribute_mode.taczlevel": "内置缓存属性"
+  "config.taczlevel.game_rules.use_taa_attributes": "使用 TAA 实体属性",
+  "config.taczlevel.game_rules.use_taa_attributes.tooltip": "通过实体属性（Attribute）应用升级加成（装填、后坐力、护甲穿透、射速、减重）。需要安装 TAA 模组。",
+  "config.taczlevel.game_rules.use_taczlevel_attributes": "使用内置缓存属性",
+  "config.taczlevel.game_rules.use_taczlevel_attributes.tooltip": "通过 TACZ 内置缓存属性系统应用升级加成（护甲穿透、射速）。无需 TAA 模组。"
 }

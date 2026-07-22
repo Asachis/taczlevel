@@ -1,9 +1,9 @@
 package com.taczlevel.block;
 
-import com.mojang.serialization.MapCodec;
 import com.taczlevel.block.entity.CreativeGunUpgradeBlockEntity;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
@@ -12,18 +12,12 @@ import net.minecraft.world.level.block.RenderShape;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.BlockHitResult;
+import net.minecraftforge.network.NetworkHooks;
 import org.jetbrains.annotations.Nullable;
 
 public class CreativeGunUpgradeBlock extends BaseEntityBlock {
-    public static final MapCodec<CreativeGunUpgradeBlock> CODEC = simpleCodec(CreativeGunUpgradeBlock::new);
-
     public CreativeGunUpgradeBlock(Properties properties) {
         super(properties);
-    }
-
-    @Override
-    public MapCodec<? extends CreativeGunUpgradeBlock> codec() {
-        return CODEC;
     }
 
     @Nullable
@@ -38,11 +32,11 @@ public class CreativeGunUpgradeBlock extends BaseEntityBlock {
     }
 
     @Override
-    public InteractionResult useWithoutItem(BlockState state, Level level, BlockPos pos, Player player, BlockHitResult hit) {
+    public InteractionResult use(BlockState state, Level level, BlockPos pos, Player player, InteractionHand hand, BlockHitResult hit) {
         if (!level.isClientSide) {
             BlockEntity be = level.getBlockEntity(pos);
             if (be instanceof CreativeGunUpgradeBlockEntity gunBE) {
-                player.openMenu(gunBE, pos);
+                NetworkHooks.openScreen((ServerPlayer) player, gunBE, buf -> buf.writeBlockPos(pos));
             }
         }
         return InteractionResult.sidedSuccess(level.isClientSide);

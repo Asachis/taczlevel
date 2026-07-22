@@ -7,7 +7,6 @@ import com.taczlevel.event.GunEvents;
 import com.taczlevel.gui.GunUpgradeMenu;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.sounds.SoundEvents;
@@ -21,9 +20,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
-import net.neoforged.neoforge.capabilities.Capabilities;
-import net.neoforged.neoforge.items.IItemHandler;
-import net.neoforged.neoforge.items.ItemStackHandler;
+import net.minecraftforge.items.ItemStackHandler;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -72,7 +69,7 @@ public class GunUpgradeBlockEntity extends BlockEntity implements MenuProvider {
         int curLevel = GunLevelManager.getLevel(gun, optionIndex);
         int maxLevel = GunLevelManager.getMaxLevelForOption(optionIndex);
 
-        if (activeSlot == -1 && curLevel == 0 && curLevel < maxLevel) {
+        if (activeSlot == -1 && curLevel == 0) {
             if (star.isEmpty() || !star.is(activationItem)) return false;
             if (star.getCount() < ModConfig.STATION.activationCount.get()) return false;
 
@@ -124,7 +121,7 @@ public class GunUpgradeBlockEntity extends BlockEntity implements MenuProvider {
         if (activeSlot != -1) return false;
         int curLevel = GunLevelManager.getLevel(gun, optionIndex);
         int maxLevel = GunLevelManager.getMaxLevelForOption(optionIndex);
-        return curLevel == 0 && curLevel < maxLevel;
+        return curLevel == 0;
     }
 
     public boolean canUnlockGate(int optionIndex) {
@@ -181,28 +178,22 @@ public class GunUpgradeBlockEntity extends BlockEntity implements MenuProvider {
     @Override
     public void onLoad() {
         super.onLoad();
-        if (level != null) {
-            level.invalidateCapabilities(worldPosition);
-        }
     }
 
     @Override
     public void setRemoved() {
         super.setRemoved();
-        if (level != null) {
-            level.invalidateCapabilities(worldPosition);
-        }
     }
 
     @Override
-    protected void saveAdditional(CompoundTag tag, HolderLookup.Provider registries) {
-        tag.put("inventory", itemHandler.serializeNBT(registries));
-        super.saveAdditional(tag, registries);
+    protected void saveAdditional(CompoundTag tag) {
+        tag.put("inventory", itemHandler.serializeNBT());
+        super.saveAdditional(tag);
     }
 
     @Override
-    protected void loadAdditional(CompoundTag tag, HolderLookup.Provider registries) {
-        super.loadAdditional(tag, registries);
-        itemHandler.deserializeNBT(registries, tag.getCompound("inventory"));
+    public void load(CompoundTag tag) {
+        super.load(tag);
+        itemHandler.deserializeNBT(tag.getCompound("inventory"));
     }
 }
