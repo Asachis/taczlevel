@@ -93,8 +93,13 @@ public class AttributeHandler {
 
     private void applyReloadSpeedBonus(IGunOperator operator, ItemStack gun) {
         double reloadBonus = GunLevelManager.getReloadSpeedBonus(gun);
-        if (reloadBonus > 0 && operator.getDataHolder().reloadTimestamp > 0) {
-            operator.getDataHolder().reloadTimestamp -= (long) (CHECK_INTERVAL * TICK_MS * reloadBonus);
-        }
+        if (reloadBonus <= 0) return;
+        long current = operator.getDataHolder().reloadTimestamp;
+        if (current <= 0) return;
+
+        long reduction = (long) (CHECK_INTERVAL * TICK_MS * reloadBonus);
+        // Never reduce below 1ms, so Tacz's own tick handler completes the reload naturally
+        // This prevents infinite reload loops when combined with other mods' reload speed bonuses
+        operator.getDataHolder().reloadTimestamp = Math.max(1, current - reduction);
     }
 }
