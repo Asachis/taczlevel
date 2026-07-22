@@ -6,7 +6,6 @@ import com.taczlevel.data.GunLevelManager;
 import com.taczlevel.event.GunEvents;
 import com.taczlevel.gui.GunUpgradeMenu;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.sounds.SoundEvents;

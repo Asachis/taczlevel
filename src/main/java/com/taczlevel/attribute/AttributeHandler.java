@@ -18,6 +18,7 @@ public class AttributeHandler {
 
     private static final long TICK_MS = 50L;
     private static final int CHECK_INTERVAL = 10;
+    private static final long MIN_RELOAD_MS = TICK_MS * 2;
 
     private static final String[] TAA_FALLBACK_NAMES = {
         "reload_time", "recoil", "armor_ignore", "rounds_per_minute", "weight", "move_speed"
@@ -79,6 +80,9 @@ public class AttributeHandler {
 
     @SubscribeEvent
     public void onLivingTick(LivingEvent.LivingTickEvent event) {
+        if (ModConfig.GAME_RULES.useTaaAttributes.get()) return;
+        if (!ModConfig.GAME_RULES.useTaczLevelAttributes.get()) return;
+
         LivingEntity entity = event.getEntity();
         if (entity.level().isClientSide) return;
         if (entity.tickCount % CHECK_INTERVAL != 0) return;
@@ -95,11 +99,12 @@ public class AttributeHandler {
         double reloadBonus = GunLevelManager.getReloadSpeedBonus(gun);
         if (reloadBonus <= 0) return;
         long current = operator.getDataHolder().reloadTimestamp;
-        if (current <= 0) return;
+        if (current <= MIN_RELOAD_MS) return;
 
-        long reduction = (long) (CHECK_INTERVAL * TICK_MS * reloadBonus);
-        // Never reduce below 1ms, so Tacz's own tick handler completes the reload naturally
-        // This prevents infinite reload loops when combined with other mods' reload speed bonuses
-        operator.getDataHolder().reloadTimestamp = Math.max(1, current - reduction);
+        // Proportional reduction of remaining time to avoid overshooting multi-stage timers
+        // At 100% bonus: remaining time halved; at 200%: reduced to 1/3, etc.
+        double reductionRatio = reloadBonus / (1.0 + reloadBonus);
+        long reduction = (long) (current * reductionRatio);
+        operator.getDataHolder().reloadTimestamp = Math.max(MIN_RELOAD_MS, current - reduction);
     }
 }
