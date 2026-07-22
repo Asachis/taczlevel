@@ -18,7 +18,7 @@ public class AttributeHandler {
 
     private static final long TICK_MS = 50L;
     private static final int CHECK_INTERVAL = 10;
-    private static final long MIN_RELOAD_MS = TICK_MS * 2;
+    private static final double MAX_ELAPSED_MULTIPLIER = 3.0;
 
     private static final String[] TAA_FALLBACK_NAMES = {
         "reload_time", "recoil", "armor_ignore", "rounds_per_minute", "weight", "move_speed"
@@ -98,13 +98,20 @@ public class AttributeHandler {
     private void applyReloadSpeedBonus(IGunOperator operator, ItemStack gun) {
         double reloadBonus = GunLevelManager.getReloadSpeedBonus(gun);
         if (reloadBonus <= 0) return;
-        long current = operator.getDataHolder().reloadTimestamp;
-        if (current <= MIN_RELOAD_MS) return;
+        long ts = operator.getDataHolder().reloadTimestamp;
+        if (ts <= 0) return;
 
-        // Proportional reduction of remaining time to avoid overshooting multi-stage timers
-        // At 100% bonus: remaining time halved; at 200%: reduced to 1/3, etc.
-        double reductionRatio = reloadBonus / (1.0 + reloadBonus);
-        long reduction = (long) (current * reductionRatio);
-        operator.getDataHolder().reloadTimestamp = Math.max(MIN_RELOAD_MS, current - reduction);
+        // reloadTimestamp is System.currentTimeMillis() when the reload stage started.
+        // To accelerate reload, we reduce the timestamp so that elapsed time appears larger.
+        // elapsed = now - timestamp is the natural progress.
+        // We add bonus * elapsed extra progress, making total progress = elapsed * (1 + bonus).
+        long now = System.currentTimeMillis();
+        long elapsed = now - ts;
+        if (elapsed <= 0) return;
+
+        long extra = (long) (elapsed * reloadBonus);
+        // Cap to prevent reducing the timestamp past the current reload stage start
+        long maxExtra = (long) (elapsed * MAX_ELAPSED_MULTIPLIER);
+        operator.getDataHolder().reloadTimestamp = ts - Math.min(extra, maxExtra);
     }
 }
