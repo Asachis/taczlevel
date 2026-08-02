@@ -208,7 +208,7 @@ public class GunEvents {
         if (!(event.getEntity() instanceof ItemEntity item)) return;
         ItemStack stack = item.getItem();
         if (!isTaczGun(stack)) return;
-        if (ModConfig.GAME_RULES.startWithUpgrades.get()) {
+        if (ModConfig.AUTO_RULES.startWithUpgrades.get()) {
             GunLevelManager.initDefaultUpgrades(stack);
         }
         if (ModConfig.AUTO_RULES.autoDummyAmmo.get() && GunLevelManager.getDummyAmmoLevel(stack) == 0) {
@@ -220,7 +220,7 @@ public class GunEvents {
     public void onItemCrafted(PlayerEvent.ItemCraftedEvent event) {
         ItemStack stack = event.getCrafting();
         if (!isTaczGun(stack)) return;
-        if (ModConfig.GAME_RULES.startWithUpgrades.get()) {
+        if (ModConfig.AUTO_RULES.startWithUpgrades.get()) {
             GunLevelManager.initDefaultUpgrades(stack);
         }
         if (ModConfig.AUTO_RULES.autoDummyAmmo.get() && GunLevelManager.getDummyAmmoLevel(stack) == 0) {
@@ -243,18 +243,20 @@ public class GunEvents {
         int maxLevel = ModConfig.DUMMY_AMMO.maxLevel.get();
 
         if (level >= maxLevel) {
-            setDummyAmmoTag(gun, "DummyAmmo", 9999);
-            return;
+            if (ModConfig.DUMMY_AMMO.infiniteAmmoAtMaxLevel.get()) {
+                setDummyAmmoTag(gun, "DummyAmmo", 9999);
+                return;
+            }
+            level = maxLevel;
         }
 
         int maxPool = ModConfig.DUMMY_AMMO.getMaxPool(level);
-        CompoundTag rootTag = getOrCreateDummyAmmoTag(gun);
+        CompoundTag rootTag = gun.getOrCreateTag();
         int current = rootTag.getInt("DummyAmmo");
 
         if (current >= maxPool) {
             if (current > maxPool) {
                 rootTag.putInt("DummyAmmo", maxPool);
-                saveDummyAmmoTag(gun, rootTag);
             }
             return;
         }
@@ -265,7 +267,6 @@ public class GunEvents {
         if (cooldown > 0) {
             rootTag.putInt("DummyAmmoRegenCooldown", Math.max(0, cooldown - 5));
             rootTag.putInt("DummyAmmoLastTick", current);
-            saveDummyAmmoTag(gun, rootTag);
             return;
         }
 
@@ -273,7 +274,6 @@ public class GunEvents {
         if (current < lastTick) {
             rootTag.putInt("DummyAmmoRegenCooldown", delay);
             rootTag.putInt("DummyAmmoLastTick", current);
-            saveDummyAmmoTag(gun, rootTag);
             return;
         }
         rootTag.putInt("DummyAmmoLastTick", current);
@@ -285,21 +285,10 @@ public class GunEvents {
         int newAmmo = Math.min(maxPool, current + (int) regen);
         rootTag.putInt("DummyAmmo", newAmmo);
         rootTag.putInt("DummyAmmoLastTick", newAmmo);
-        saveDummyAmmoTag(gun, rootTag);
-    }
-
-    private static CompoundTag getOrCreateDummyAmmoTag(ItemStack stack) {
-        return stack.getOrCreateTag();
-    }
-
-    private static void saveDummyAmmoTag(ItemStack stack, CompoundTag tag) {
-        stack.setTag(tag);
     }
 
     private static void setDummyAmmoTag(ItemStack stack, String key, int value) {
-        CompoundTag tag = getOrCreateDummyAmmoTag(stack);
-        tag.putInt(key, value);
-        saveDummyAmmoTag(stack, tag);
+        stack.getOrCreateTag().putInt(key, value);
     }
 
     private int getExpForMob(LivingEntity entity) {

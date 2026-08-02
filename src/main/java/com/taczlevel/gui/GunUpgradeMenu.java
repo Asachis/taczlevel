@@ -6,6 +6,7 @@ import com.taczlevel.block.entity.GunUpgradeBlockEntity;
 import com.taczlevel.config.ModConfig;
 import com.taczlevel.data.GunLevelManager;
 import com.taczlevel.event.GunEvents;
+import net.minecraft.core.BlockPos;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
@@ -13,6 +14,7 @@ import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.ContainerLevelAccess;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraftforge.items.SlotItemHandler;
 
 public class GunUpgradeMenu extends AbstractContainerMenu {
@@ -38,7 +40,16 @@ public class GunUpgradeMenu extends AbstractContainerMenu {
     }
 
     public GunUpgradeMenu(int id, Inventory inv, FriendlyByteBuf buf) {
-        this(id, inv, (GunUpgradeBlockEntity) inv.player.level().getBlockEntity(buf.readBlockPos()));
+        this(id, inv, getBlockEntity(inv, buf));
+    }
+
+    private static GunUpgradeBlockEntity getBlockEntity(Inventory inv, FriendlyByteBuf buf) {
+        BlockPos pos = buf.readBlockPos();
+        BlockEntity be = inv.player.level().getBlockEntity(pos);
+        if (be instanceof GunUpgradeBlockEntity gunBe) {
+            return gunBe;
+        }
+        throw new IllegalStateException("Expected GunUpgradeBlockEntity at " + pos + ", got " + be);
     }
 
     public GunUpgradeBlockEntity getBlockEntity() {

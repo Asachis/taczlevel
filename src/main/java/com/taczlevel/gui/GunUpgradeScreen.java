@@ -33,6 +33,7 @@ public class GunUpgradeScreen extends AbstractContainerScreen<GunUpgradeMenu> {
     private static final int[] ACCENT_DIM = {
         0xFF004d3f, 0xFF4d2a00, 0xFF3a1a55, 0xFF4d1515, 0xFF004d7f, 0xFF225522,
     };
+    private static final int OPTIONS = ACCENT.length;
 
     private static final int CARDS_X    = 74;
     private static final int CARDS_Y    = 16;
@@ -46,7 +47,6 @@ public class GunUpgradeScreen extends AbstractContainerScreen<GunUpgradeMenu> {
     private static final int VIEWPORT_H = PANEL_BOT - CARDS_Y;
     private static final int BTN_W      = 50;
     private static final int BTN_H      = 12;
-    private static final int OPTIONS    = 6;
 
     private static final int EXP_TEXT_Y = 135;
     private static final int EXP_BAR_Y  = 141;
@@ -98,26 +98,36 @@ public class GunUpgradeScreen extends AbstractContainerScreen<GunUpgradeMenu> {
     public void containerTick() {
         super.containerTick();
         boolean hasGun = menu.hasGun();
-        ItemStack gun = menu.getBlockEntity().getItemHandler().getStackInSlot(0);
-        int activeSlot = hasGun ? GunLevelManager.getActiveSlot(gun) : -1;
 
         int contentH = OPTIONS * (CARD_H + CARD_GAP);
         int maxScroll = Math.max(0, contentH - VIEWPORT_H);
         if (scrollOffset > maxScroll) scrollOffset = maxScroll;
 
-        for (int i = 0; i < OPTIONS; i++) {
-            int lvl = hasGun ? GunLevelManager.getLevel(gun, i) : 0;
-            int maxLvl = GunLevelManager.getMaxLevelForOption(i);
-            boolean maxed = hasGun && lvl >= maxLvl;
-            boolean activated = hasGun && GunLevelManager.isActivated(gun, i);
+        int activeSlot = -1;
+        ItemStack gun = ItemStack.EMPTY;
+        if (hasGun) {
+            gun = menu.getBlockEntity().getItemHandler().getStackInSlot(0);
+            activeSlot = GunLevelManager.getActiveSlot(gun);
+        }
 
+        for (int i = 0; i < OPTIONS; i++) {
             int by = topPos + CARDS_Y + i * (CARD_H + CARD_GAP) + 2 - scrollOffset;
             actionButtons[i].setY(by);
             boolean inView = by + BTN_H > topPos + CARDS_Y && by < topPos + PANEL_BOT;
             actionButtons[i].visible = inView;
 
+            actionButtons[i].active = false;
+            actionButtons[i].setMessage(Component.translatable("gui.taczlevel.activate"));
+
+            if (!hasGun) continue;
+
+            int lvl = GunLevelManager.getLevel(gun, i);
+            int maxLvl = GunLevelManager.getMaxLevelForOption(i);
+            boolean maxed = lvl >= maxLvl;
+            boolean activated = GunLevelManager.isActivated(gun, i);
+
             if (activeSlot == -1) {
-                actionButtons[i].active = hasGun && !activated && !maxed;
+                actionButtons[i].active = !activated && !maxed;
                 if (maxed) {
                     actionButtons[i].setMessage(Component.translatable("gui.taczlevel.status_maxed"));
                 } else {
@@ -125,17 +135,14 @@ public class GunUpgradeScreen extends AbstractContainerScreen<GunUpgradeMenu> {
                 }
             } else if (activeSlot == i) {
                 if (maxed) {
-                    actionButtons[i].active = false;
                     actionButtons[i].setMessage(Component.translatable("gui.taczlevel.status_maxed"));
-                } else if (hasGun && GunLevelManager.isAtGateLevel(gun, i) && !GunLevelManager.isGateUnlocked(gun, i)) {
+                } else if (GunLevelManager.isAtGateLevel(gun, i) && !GunLevelManager.isGateUnlocked(gun, i)) {
                     actionButtons[i].active = true;
                     actionButtons[i].setMessage(Component.translatable("gui.taczlevel.unlock_gate"));
                 } else {
-                    actionButtons[i].active = false;
                     actionButtons[i].setMessage(Component.translatable("gui.taczlevel.status_active"));
                 }
             } else {
-                actionButtons[i].active = false;
                 if (maxed) {
                     actionButtons[i].setMessage(Component.translatable("gui.taczlevel.status_maxed"));
                 } else {

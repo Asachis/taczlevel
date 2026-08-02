@@ -167,6 +167,9 @@ public class ClothConfigScreen {
                 ModConfig.DUMMY_AMMO.regenPerSecondPerLevel.get(), 5.0, v -> ModConfig.DUMMY_AMMO.regenPerSecondPerLevel.set(v));
         addIntEntry(cat, eb, "config.taczlevel.dummy_ammo.regen_delay_ticks",
                 ModConfig.DUMMY_AMMO.regenDelayTicks.get(), 40, v -> ModConfig.DUMMY_AMMO.regenDelayTicks.set(v));
+        addBooleanEntry(cat, eb, "config.taczlevel.dummy_ammo.infinite_ammo_at_max_level",
+                ModConfig.DUMMY_AMMO.infiniteAmmoAtMaxLevel.get(), true,
+                v -> ModConfig.DUMMY_AMMO.infiniteAmmoAtMaxLevel.set(v));
     }
 
     private static void buildWeight(ConfigBuilder builder, ConfigEntryBuilder eb) {
@@ -188,18 +191,37 @@ public class ClothConfigScreen {
                 .setTooltip(Component.translatable("config.taczlevel.auto_rules.auto_dummy_ammo.tooltip"))
                 .setSaveConsumer(v -> ModConfig.AUTO_RULES.autoDummyAmmo.set(v))
                 .build());
+
+        cat.addEntry(eb.startBooleanToggle(
+                        Component.translatable("config.taczlevel.auto_rules.start_with_upgrades"),
+                        ModConfig.AUTO_RULES.startWithUpgrades.get())
+                .setDefaultValue(false)
+                .setTooltip(Component.translatable("config.taczlevel.auto_rules.start_with_upgrades.tooltip"))
+                .setSaveConsumer(v -> ModConfig.AUTO_RULES.startWithUpgrades.set(v))
+                .build());
+
+        addBooleanEntry(cat, eb, "config.taczlevel.auto_rules.start_with_reload",
+                ModConfig.AUTO_RULES.startWithReload.get(), true,
+                v -> ModConfig.AUTO_RULES.startWithReload.set(v));
+        addBooleanEntry(cat, eb, "config.taczlevel.auto_rules.start_with_recoil",
+                ModConfig.AUTO_RULES.startWithRecoil.get(), true,
+                v -> ModConfig.AUTO_RULES.startWithRecoil.set(v));
+        addBooleanEntry(cat, eb, "config.taczlevel.auto_rules.start_with_pen",
+                ModConfig.AUTO_RULES.startWithPen.get(), true,
+                v -> ModConfig.AUTO_RULES.startWithPen.set(v));
+        addBooleanEntry(cat, eb, "config.taczlevel.auto_rules.start_with_fire_rate",
+                ModConfig.AUTO_RULES.startWithFireRate.get(), true,
+                v -> ModConfig.AUTO_RULES.startWithFireRate.set(v));
+        addBooleanEntry(cat, eb, "config.taczlevel.auto_rules.start_with_dummy_ammo",
+                ModConfig.AUTO_RULES.startWithDummyAmmo.get(), true,
+                v -> ModConfig.AUTO_RULES.startWithDummyAmmo.set(v));
+        addBooleanEntry(cat, eb, "config.taczlevel.auto_rules.start_with_weight",
+                ModConfig.AUTO_RULES.startWithWeight.get(), true,
+                v -> ModConfig.AUTO_RULES.startWithWeight.set(v));
     }
 
     private static void buildGameRules(ConfigBuilder builder, ConfigEntryBuilder eb) {
         ConfigCategory cat = builder.getOrCreateCategory(Component.translatable("config.taczlevel.section.game_rules"));
-
-        cat.addEntry(eb.startBooleanToggle(
-                        Component.translatable("config.taczlevel.game_rules.start_with_upgrades"),
-                        ModConfig.GAME_RULES.startWithUpgrades.get())
-                .setDefaultValue(false)
-                .setTooltip(Component.translatable("config.taczlevel.game_rules.start_with_upgrades.tooltip"))
-                .setSaveConsumer(v -> ModConfig.GAME_RULES.startWithUpgrades.set(v))
-                .build());
 
         cat.addEntry(eb.startBooleanToggle(
                         Component.translatable("config.taczlevel.game_rules.use_taa_attributes"),
@@ -215,6 +237,16 @@ public class ClothConfigScreen {
                 .setDefaultValue(true)
                 .setTooltip(Component.translatable("config.taczlevel.game_rules.use_taczlevel_attributes.tooltip"))
                 .setSaveConsumer(v -> ModConfig.GAME_RULES.useTaczLevelAttributes.set(v))
+                .build());
+    }
+
+    private static void addBooleanEntry(ConfigCategory cat, ConfigEntryBuilder eb,
+                                        String key, boolean value, boolean def,
+                                        java.util.function.Consumer<Boolean> save) {
+        cat.addEntry(eb.startBooleanToggle(Component.translatable(key), value)
+                .setDefaultValue(def)
+                .setTooltip(Component.translatable(key + ".tooltip"))
+                .setSaveConsumer(save)
                 .build());
     }
 

@@ -136,7 +136,7 @@ public class TaczLevelCommand {
 
     private static int setAutoUpgrade(CommandContext<CommandSourceStack> ctx) {
         boolean enabled = BoolArgumentType.getBool(ctx, "enabled");
-        ModConfig.GAME_RULES.startWithUpgrades.set(enabled);
+        ModConfig.AUTO_RULES.startWithUpgrades.set(enabled);
         ctx.getSource().sendSuccess(() -> Component.literal(
                 "§eAuto-upgrade " + (enabled ? "§aenabled" : "§cdisabled") + "§r"), true);
         return 1;

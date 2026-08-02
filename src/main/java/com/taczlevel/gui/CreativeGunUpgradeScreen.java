@@ -33,6 +33,7 @@ public class CreativeGunUpgradeScreen extends AbstractContainerScreen<CreativeGu
     private static final int[] ACCENT_DIM = {
         0xFF004d3f, 0xFF4d2a00, 0xFF3a1a55, 0xFF4d1515, 0xFF004d7f, 0xFF225522,
     };
+    private static final int OPTIONS = ACCENT.length;
 
     private static final int CARDS_X    = 74;
     private static final int CARDS_Y    = 16;
@@ -46,7 +47,6 @@ public class CreativeGunUpgradeScreen extends AbstractContainerScreen<CreativeGu
     private static final int VIEWPORT_H = PANEL_BOT - CARDS_Y;
     private static final int BTN_W      = 50;
     private static final int BTN_H      = 12;
-    private static final int OPTIONS    = 6;
 
     private static final int EXP_TEXT_Y = 135;
     private static final int EXP_BAR_Y  = 141;
@@ -103,24 +103,32 @@ public class CreativeGunUpgradeScreen extends AbstractContainerScreen<CreativeGu
         int maxScroll = Math.max(0, contentH - VIEWPORT_H);
         if (scrollOffset > maxScroll) scrollOffset = maxScroll;
 
-        for (int i = 0; i < OPTIONS; i++) {
-            ItemStack gun = menu.getBlockEntity().getItemHandler().getStackInSlot(0);
-            boolean activated = hasGun && GunLevelManager.isActivated(gun, i);
-            int lvl = hasGun ? GunLevelManager.getLevel(gun, i) : 0;
-            int maxLvl = GunLevelManager.getMaxLevelForOption(i);
-            boolean maxed = activated && lvl >= maxLvl;
+        ItemStack gun = hasGun ? menu.getBlockEntity().getItemHandler().getStackInSlot(0) : null;
 
+        for (int i = 0; i < OPTIONS; i++) {
             int by = topPos + CARDS_Y + i * (CARD_H + CARD_GAP) + 2 - scrollOffset;
             actionButtons[i].setY(by);
             boolean inView = by + BTN_H > topPos + CARDS_Y && by < topPos + PANEL_BOT;
             actionButtons[i].visible = inView;
 
-            actionButtons[i].active = hasGun && !activated;
-            actionButtons[i].setMessage(maxed
-                    ? Component.translatable("gui.taczlevel.status_maxed")
-                    : activated
-                    ? Component.translatable("gui.taczlevel.status_active")
-                    : Component.translatable("gui.taczlevel.upgrade_" + getKey(i)));
+            actionButtons[i].active = false;
+            actionButtons[i].setMessage(Component.translatable("gui.taczlevel.upgrade_" + getKey(i)));
+
+            if (!hasGun || gun == null) continue;
+
+            boolean activated = GunLevelManager.isActivated(gun, i);
+            int lvl = GunLevelManager.getLevel(gun, i);
+            int maxLvl = GunLevelManager.getMaxLevelForOption(i);
+            boolean maxed = activated && lvl >= maxLvl;
+
+            actionButtons[i].active = !activated;
+            if (maxed) {
+                actionButtons[i].setMessage(Component.translatable("gui.taczlevel.status_maxed"));
+            } else if (activated) {
+                actionButtons[i].setMessage(Component.translatable("gui.taczlevel.status_active"));
+            } else {
+                actionButtons[i].setMessage(Component.translatable("gui.taczlevel.upgrade_" + getKey(i)));
+            }
         }
     }
 

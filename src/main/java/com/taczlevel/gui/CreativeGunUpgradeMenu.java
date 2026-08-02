@@ -6,6 +6,7 @@ import com.taczlevel.block.entity.CreativeGunUpgradeBlockEntity;
 import com.taczlevel.config.ModConfig;
 import com.taczlevel.data.GunLevelManager;
 import com.taczlevel.event.GunEvents;
+import net.minecraft.core.BlockPos;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
@@ -13,6 +14,7 @@ import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.ContainerLevelAccess;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraftforge.items.SlotItemHandler;
 
 public class CreativeGunUpgradeMenu extends AbstractContainerMenu {
@@ -38,7 +40,16 @@ public class CreativeGunUpgradeMenu extends AbstractContainerMenu {
     }
 
     public CreativeGunUpgradeMenu(int id, Inventory inv, FriendlyByteBuf buf) {
-        this(id, inv, (CreativeGunUpgradeBlockEntity) inv.player.level().getBlockEntity(buf.readBlockPos()));
+        this(id, inv, getBlockEntity(inv, buf));
+    }
+
+    private static CreativeGunUpgradeBlockEntity getBlockEntity(Inventory inv, FriendlyByteBuf buf) {
+        BlockPos pos = buf.readBlockPos();
+        BlockEntity be = inv.player.level().getBlockEntity(pos);
+        if (be instanceof CreativeGunUpgradeBlockEntity gunBe) {
+            return gunBe;
+        }
+        throw new IllegalStateException("Expected CreativeGunUpgradeBlockEntity at " + pos + ", got " + be);
     }
 
     public CreativeGunUpgradeBlockEntity getBlockEntity() {

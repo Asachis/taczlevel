@@ -6,6 +6,7 @@ import com.tacz.guns.api.modifier.ParameterizedCachePair;
 import com.tacz.guns.resource.modifier.AttachmentCacheProperty;
 import com.tacz.guns.resource.pojo.data.attachment.Modifier;
 import com.tacz.guns.resource.pojo.data.gun.MoveSpeed;
+import com.taczlevel.config.ModConfig;
 import com.taczlevel.data.GunLevelManager;
 import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -16,6 +17,7 @@ public class GunStatsHandler {
 
     @SubscribeEvent
     public void onAttachmentProperty(AttachmentPropertyEvent event) {
+        if (!ModConfig.GAME_RULES.useTaczLevelAttributes.get()) return;
         ItemStack gun = event.getGunItem();
         if (!GunLevelManager.hasAnyUpgrade(gun)) return;
 

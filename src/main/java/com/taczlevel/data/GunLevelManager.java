@@ -1,6 +1,7 @@
 package com.taczlevel.data;
 
 import com.taczlevel.config.ModConfig;
+import com.taczlevel.config.ModConfig.AutoRulesCategory;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.item.ItemStack;
 
@@ -354,10 +355,13 @@ public class GunLevelManager {
 
     public static void initDefaultUpgrades(ItemStack stack) {
         if (hasAnyUpgrade(stack)) return;
-        setTagInt(stack, RELOAD_LEVEL_TAG, 1);
-        setTagInt(stack, RECOIL_LEVEL_TAG, 1);
-        setTagInt(stack, PEN_LEVEL_TAG, 1);
-        setTagInt(stack, FIRE_RATE_LEVEL_TAG, 1);
+        AutoRulesCategory rules = ModConfig.AUTO_RULES;
+        if (rules.startWithReload.get()) setTagInt(stack, RELOAD_LEVEL_TAG, 1);
+        if (rules.startWithRecoil.get()) setTagInt(stack, RECOIL_LEVEL_TAG, 1);
+        if (rules.startWithPen.get()) setTagInt(stack, PEN_LEVEL_TAG, 1);
+        if (rules.startWithFireRate.get()) setTagInt(stack, FIRE_RATE_LEVEL_TAG, 1);
+        if (rules.startWithDummyAmmo.get()) setTagInt(stack, DUMMY_AMMO_LEVEL_TAG, 1);
+        if (rules.startWithWeight.get()) setTagInt(stack, WEIGHT_LEVEL_TAG, 1);
         clearActiveSlot(stack);
     }
 

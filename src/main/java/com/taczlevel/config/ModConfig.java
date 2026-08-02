@@ -209,6 +209,7 @@ public class ModConfig {
         public final ForgeConfigSpec.DoubleValue regenPerSecond;
         public final ForgeConfigSpec.DoubleValue regenPerSecondPerLevel;
         public final ForgeConfigSpec.IntValue regenDelayTicks;
+        public final ForgeConfigSpec.BooleanValue infiniteAmmoAtMaxLevel;
 
         DummyAmmoCategory() {
             BUILDER.push("dummy_ammo");
@@ -230,6 +231,9 @@ public class ModConfig {
             regenDelayTicks = BUILDER
                     .comment("Delay in ticks before regen starts after using ammo (20 ticks = 1 second)")
                     .defineInRange("regen_delay_ticks", 40, 0, 6000);
+            infiniteAmmoAtMaxLevel = BUILDER
+                    .comment("When enabled, virtual ammo at max level becomes unlimited (9999 ammo). When disabled, max level uses the normal ammo pool with regen instead of infinite ammo.")
+                    .define("infinite_ammo_at_max_level", true);
             BUILDER.pop();
         }
 
@@ -263,15 +267,11 @@ public class ModConfig {
     }
 
     public static class GameRulesCategory {
-        public final ForgeConfigSpec.BooleanValue startWithUpgrades;
         public final ForgeConfigSpec.BooleanValue useTaaAttributes;
         public final ForgeConfigSpec.BooleanValue useTaczLevelAttributes;
 
         GameRulesCategory() {
             BUILDER.push("game_rules");
-            startWithUpgrades = BUILDER
-                    .comment("When enabled, players receive tacz guns with all upgrades at level 1 by default")
-                    .define("start_with_upgrades", false);
             useTaaAttributes = BUILDER
                     .comment("Use TAA entity attributes to apply upgrade bonuses (reload, recoil, armor pen, fire rate, weight). Requires TAA mod to be installed.")
                     .define("use_taa_attributes", false);
@@ -284,12 +284,40 @@ public class ModConfig {
 
     public static class AutoRulesCategory {
         public final ForgeConfigSpec.BooleanValue autoDummyAmmo;
+        public final ForgeConfigSpec.BooleanValue startWithUpgrades;
+        public final ForgeConfigSpec.BooleanValue startWithReload;
+        public final ForgeConfigSpec.BooleanValue startWithRecoil;
+        public final ForgeConfigSpec.BooleanValue startWithPen;
+        public final ForgeConfigSpec.BooleanValue startWithFireRate;
+        public final ForgeConfigSpec.BooleanValue startWithDummyAmmo;
+        public final ForgeConfigSpec.BooleanValue startWithWeight;
 
         AutoRulesCategory() {
             BUILDER.push("auto_rules");
             autoDummyAmmo = BUILDER
                     .comment("When enabled, automatically applies dummy ammo upgrades to new guns")
                     .define("auto_dummy_ammo", false);
+            startWithUpgrades = BUILDER
+                    .comment("When enabled, players receive tacz guns with the selected upgrades below at level 1 by default")
+                    .define("start_with_upgrades", false);
+            startWithReload = BUILDER
+                    .comment("Automatically enable Reload Speed upgrade at level 1 on new guns when start_with_upgrades is enabled")
+                    .define("start_with_reload", true);
+            startWithRecoil = BUILDER
+                    .comment("Automatically enable Recoil upgrade at level 1 on new guns when start_with_upgrades is enabled")
+                    .define("start_with_recoil", true);
+            startWithPen = BUILDER
+                    .comment("Automatically enable Armor Penetration upgrade at level 1 on new guns when start_with_upgrades is enabled")
+                    .define("start_with_pen", true);
+            startWithFireRate = BUILDER
+                    .comment("Automatically enable Fire Rate upgrade at level 1 on new guns when start_with_upgrades is enabled")
+                    .define("start_with_fire_rate", true);
+            startWithDummyAmmo = BUILDER
+                    .comment("Automatically enable Virtual Ammo upgrade at level 1 on new guns when start_with_upgrades is enabled")
+                    .define("start_with_dummy_ammo", true);
+            startWithWeight = BUILDER
+                    .comment("Automatically enable Weight Reduction upgrade at level 1 on new guns when start_with_upgrades is enabled")
+                    .define("start_with_weight", true);
             BUILDER.pop();
         }
     }
